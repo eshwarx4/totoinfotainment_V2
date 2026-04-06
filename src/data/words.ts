@@ -1,4 +1,11 @@
 import { WordItem } from "@/types/content";
+import { getEmojiImageUrl } from "@/lib/emojiImages";
+
+function img(english: string, category: string, existing?: string): string {
+  // Use existing image if it's a real file path, otherwise emoji fallback
+  if (existing && !existing.includes('placeholder')) return existing;
+  return getEmojiImageUrl(english, category);
+}
 
 export const words: WordItem[] = [
   {
@@ -42,7 +49,7 @@ export const words: WordItem[] = [
     english: "tree",
     toto: "দাং",
     transliteration: "dang",
-    imageUrl: "/images/words/sun.png",
+    imageUrl: img("tree", "Plants"),
     audioToto: "/content/audio/words/word_004_toto.mp3",
     audioEnglish: "/content/audio/words/word_004_eng.mp3",
     category: "Plants",
@@ -54,7 +61,7 @@ export const words: WordItem[] = [
     english: "dog",
     toto: "কুতা",
     transliteration: "kuta",
-    imageUrl: "/images/words/apple.png",
+    imageUrl: img("dog", "Animals"),
     audioToto: "/content/audio/words/word_005_toto.mp3",
     audioEnglish: "/content/audio/words/word_005_eng.mp3",
     category: "Animals",
@@ -66,7 +73,7 @@ export const words: WordItem[] = [
     english: "hand",
     toto: "হাত",
     transliteration: "hath",
-    imageUrl: "/images/words/water.png",
+    imageUrl: img("hand", "Body"),
     audioToto: "/content/audio/words/word_006_toto.mp3",
     audioEnglish: "/content/audio/words/word_006_eng.mp3",
     category: "Body",
@@ -78,7 +85,7 @@ export const words: WordItem[] = [
     english: "book",
     toto: "বই",
     transliteration: "boi",
-    imageUrl: "/images/words/apple.png",
+    imageUrl: img("book", "Objects"),
     audioToto: "/content/audio/words/word_007_toto.mp3",
     audioEnglish: "/content/audio/words/word_007_eng.mp3",
     category: "Objects",
@@ -90,7 +97,7 @@ export const words: WordItem[] = [
     english: "rice",
     toto: "ভাত",
     transliteration: "bhaat",
-    imageUrl: "/images/words/water.png",
+    imageUrl: img("rice", "Food"),
     audioToto: "/content/audio/words/word_008_toto.mp3",
     audioEnglish: "/content/audio/words/word_008_eng.mp3",
     category: "Food",
@@ -102,7 +109,7 @@ export const words: WordItem[] = [
     english: "cat",
     toto: "বিড়াল",
     transliteration: "biral",
-    imageUrl: "/images/words/sun.png",
+    imageUrl: img("cat", "Animals"),
     audioToto: "/content/audio/words/word_009_toto.mp3",
     audioEnglish: "/content/audio/words/word_009_eng.mp3",
     category: "Animals",
@@ -114,7 +121,7 @@ export const words: WordItem[] = [
     english: "flower",
     toto: "ফুল",
     transliteration: "phool",
-    imageUrl: "/images/words/apple.png",
+    imageUrl: img("flower", "Plants"),
     audioToto: "/content/audio/words/word_010_toto.mp3",
     audioEnglish: "/content/audio/words/word_010_eng.mp3",
     category: "Plants",

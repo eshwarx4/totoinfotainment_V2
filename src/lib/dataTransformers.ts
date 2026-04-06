@@ -1,21 +1,22 @@
 import { WordRow, ConceptRow, ConceptSlideRow, StoryRow } from './supabaseQueries';
 import { WordItem, Story, StorySlide } from '@/types/content';
+import { getEmojiImageUrl } from './emojiImages';
 
 /**
  * Transform WordRow from database to WordItem for components
  */
 export function transformWordRowToWordItem(row: WordRow): WordItem {
+  const category = row.category || 'Nature';
+
   return {
     id: row.id,
     english: row.english_word,
-    toto: row.toto_narration || row.english_word, // Fallback to English if Toto not available
-    transliteration: '', // Can be added later if needed
-    imageUrl: row.image_url || '/placeholder.svg',
+    toto: row.toto_narration || row.english_word,
+    transliteration: '',
+    imageUrl: row.image_url || getEmojiImageUrl(row.english_word, category),
     audioToto: row.audio_toto_url || '',
     audioEnglish: row.audio_english_url || '',
-    category: (row.category === 'Food' || row.category === 'Animals' || row.category === 'Plants' || row.category === 'Objects' || row.category === 'Nature' || row.category === 'Body') 
-      ? row.category as WordItem['category']
-      : 'Nature' as WordItem['category'], // Default fallback
+    category,
     usageSentenceToto: row.toto_narration || undefined,
     usageSentenceEnglish: row.use_case_sentence || undefined,
   };

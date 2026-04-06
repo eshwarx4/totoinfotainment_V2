@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Loader2 } from "lucide-react";
 import { Story } from "@/types/content";
 import { fetchConcepts, fetchConceptSlides, fetchStories } from "@/lib/supabaseQueries";
 import { transformConceptToStory, transformStoryRowToStory } from "@/lib/dataTransformers";
@@ -18,7 +18,6 @@ export default function Stories() {
         setLoading(true);
         const allStories: Story[] = [];
 
-        // Load concepts (educational stories)
         const concepts = await fetchConcepts();
         for (const concept of concepts) {
           const slides = await fetchConceptSlides(concept.id);
@@ -27,7 +26,6 @@ export default function Stories() {
           }
         }
 
-        // Load folk stories
         const folkStories = await fetchStories();
         const transformedFolkStories = folkStories.map(transformStoryRowToStory);
         allStories.push(...transformedFolkStories);
@@ -44,31 +42,21 @@ export default function Stories() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
-      </header>
+    <main className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-primary mb-2">Concept Stories</h1>
+        <p className="text-lg text-muted-foreground">
+          Explore fun educational stories about science and nature
+        </p>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">Concept Stories</h1>
-          <p className="text-lg text-muted-foreground">
-            Explore fun educational stories about science and nature
-          </p>
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {stories.map((story) => (
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {stories.map((story) => (
             <Card
               key={story.id}
               className="card-elevated cursor-pointer hover:scale-105 transition-transform animate-slide-in"
@@ -97,10 +85,9 @@ export default function Stories() {
                 </div>
               </CardContent>
             </Card>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+          ))}
+        </div>
+      )}
+    </main>
   );
 }

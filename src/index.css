@@ -2,55 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ==========================================
+   TOTO INFOTAINMENT V3 - DESIGN SYSTEM
+   Child-friendly, cartoon-inspired, game-driven
+   ========================================== */
 
 @layer base {
   :root {
-    /* Warm, earthy educational palette */
-    --background: 42 47% 97%;
-    --foreground: 25 40% 20%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 25 40% 20%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 40% 20%;
-
-    /* Terracotta primary */
-    --primary: 14 65% 55%;
+    /* Primary: Green - buttons, progress, success */
+    --primary: 122 39% 49%;
     --primary-foreground: 0 0% 100%;
 
-    /* Sage green secondary */
-    --secondary: 140 30% 60%;
-    --secondary-foreground: 25 40% 20%;
+    /* Secondary: Amber - stars, XP, highlights */
+    --secondary: 45 100% 51%;
+    --secondary-foreground: 25 40% 15%;
 
-    /* Warm cream muted */
-    --muted: 40 40% 90%;
-    --muted-foreground: 25 25% 45%;
-
-    /* Coral accent */
-    --accent: 6 78% 65%;
+    /* Accent: Coral - alerts, locked items */
+    --accent: 6 100% 70%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Background: Light blue → white gradient */
+    --background: 210 60% 97%;
+    --foreground: 231 53% 18%;
+
+    /* Cards */
+    --card: 0 0% 100%;
+    --card-foreground: 231 53% 18%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 231 53% 18%;
+
+    /* Muted */
+    --muted: 210 20% 93%;
+    --muted-foreground: 200 15% 40%;
+
+    /* Destructive */
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 30% 85%;
-    --input: 40 30% 85%;
-    --ring: 14 65% 55%;
+    /* Border / Input */
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 122 39% 49%;
 
+    /* Radius */
     --radius: 1rem;
 
-    /* Success/celebration */
-    --success: 142 71% 45%;
+    /* Success */
+    --success: 122 39% 49%;
     --success-foreground: 0 0% 100%;
-
-    /* Custom tokens for educational UI */
-    --celebration: 45 100% 60%;
-    --progress-bg: 140 20% 85%;
-    --progress-fill: 140 45% 50%;
   }
 }
 
@@ -60,46 +61,453 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+    background: linear-gradient(180deg, #E3F2FD 0%, #FFFFFF 50%, #F1F8E9 100%);
+    min-height: 100dvh;
   }
 
-  /* Educational UI patterns */
-  .celebration-star {
-    color: hsl(var(--celebration));
-    animation: bounce-subtle 1s ease-in-out infinite;
+  /* === PHONE FRAME (Desktop centered view) === */
+  @media (min-width: 769px) {
+    body {
+      background: #111827;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
   }
 
-  .audio-button {
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Remove default focus outlines, add custom */
+  :focus-visible {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+}
+
+@layer components {
+
+  /* === GAME BUTTONS === */
+  .btn-game {
+    @apply relative inline-flex items-center justify-center rounded-2xl font-bold text-lg text-white px-8 py-4 transition-all duration-150 ease-out active:scale-95 active:translate-y-0.5;
+    box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-game:active {
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-game-primary {
+    @apply btn-game bg-game-primary;
+    box-shadow: 0 4px 0 0 #388E3C;
+  }
+
+  .btn-game-primary:active {
+    box-shadow: 0 1px 0 0 #388E3C;
+  }
+
+  .btn-game-secondary {
+    @apply btn-game bg-game-secondary text-gray-800;
+    box-shadow: 0 4px 0 0 #FFA000;
+  }
+
+  .btn-game-secondary:active {
+    box-shadow: 0 1px 0 0 #FFA000;
+  }
+
+  .btn-game-accent {
+    @apply btn-game bg-game-accent;
+    box-shadow: 0 4px 0 0 #D84315;
+  }
+
+  .btn-game-accent:active {
+    box-shadow: 0 1px 0 0 #D84315;
+  }
+
+  /* === GAME CARDS === */
+  .card-game {
+    @apply bg-white rounded-3xl overflow-hidden;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08),
+      0 2px 8px -2px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card-game:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.12),
+      0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-game-elevated {
+    @apply card-game;
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.12),
+      0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  }
+
+  /* === MAP NODE === */
+  .map-node {
+    @apply w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl transition-all duration-200;
+  }
+
+  .map-node-active {
+    @apply map-node bg-game-primary text-white shadow-game-glow;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .map-node-completed {
+    @apply map-node bg-game-primary text-white;
+  }
+
+  .map-node-locked {
+    @apply map-node bg-game-locked text-gray-500;
+  }
+
+  /* === STAR DISPLAY === */
+  .star {
+    @apply inline-block text-3xl;
+    color: #B0BEC5;
     transition: all 0.3s ease;
   }
-  
-  .audio-button:hover {
-    transform: scale(1.1);
-  }
-  
-  .audio-button:active {
-    transform: scale(0.95);
+
+  .star-earned {
+    color: #FFD700;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
   }
 
-  .card-elevated {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    transition: box-shadow 0.3s ease;
-  }
-  
-  .card-elevated:hover {
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* === XP BAR === */
+  .xp-bar {
+    @apply w-full h-3 rounded-full overflow-hidden;
+    background: #E8EAF6;
   }
 
-  .progress-bar {
-    background-color: hsl(var(--progress-bg));
-    border-radius: 9999px;
+  .xp-bar-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+    background: linear-gradient(90deg, #7C4DFF, #B388FF);
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-bar-game {
+    @apply w-full h-2.5 rounded-full overflow-hidden;
+    background: hsl(var(--muted));
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  }
+
+  /* === SPEECH BUBBLE (Tutorial) === */
+  .speech-bubble {
+    @apply relative bg-white rounded-2xl p-4 shadow-game;
+  }
+
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 30px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid white;
+  }
+
+  /* === FEEDBACK ANIMATIONS === */
+  .answer-correct {
+    @apply border-4 border-game-correct;
+    animation: correct-flash 0.6s ease-out;
+  }
+
+  .answer-wrong {
+    @apply border-4 border-game-wrong;
+    animation: shake 0.5s ease-in-out;
+  }
+
+  /* === 3D CARD UTILITIES === */
+  .perspective-500 {
+    perspective: 500px;
+  }
+
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  /* === SCREEN TRANSITION === */
+  .screen-enter {
+    animation: fade-in 0.3s ease-out, slide-up 0.4s ease-out;
+  }
+
+  /* === OPTION CARD (for games) === */
+  .option-card {
+    @apply bg-white rounded-2xl border-3 border-transparent p-3 cursor-pointer transition-all duration-150 active:scale-95;
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  }
+
+  .option-card:hover {
+    @apply border-primary/30;
+    transform: translateY(-2px);
+  }
+
+  .option-card-selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  /* === WORLD CARD === */
+  .world-card {
+    @apply relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-200;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  .world-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.15);
+  }
+
+  .world-card-locked {
+    filter: grayscale(0.5);
+    opacity: 0.7;
+  }
+
+  /* === MASCOT === */
+  .mascot-bounce {
+    animation: float 2s ease-in-out infinite;
+  }
+
+  /* === BOTTOM NAVBAR === */
+  .navbar-bottom {
+    @apply absolute bottom-0 left-0 right-0 z-40;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -4px 20px -4px rgba(0, 0, 0, 0.06);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .navbar-inner {
+    @apply mx-auto flex items-center justify-around px-1 py-1;
+  }
+
+  .navbar-tab {
+    @apply flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90;
+    min-width: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .navbar-tab-active {
+    /* No background needed - icon wrap handles the active state */
+  }
+
+  .navbar-tab-inactive:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .navbar-icon-wrap {
+    @apply w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200;
+  }
+
+  .navbar-icon-active {
+    @apply bg-game-primary;
+    box-shadow: 0 2px 8px -1px rgba(76, 175, 80, 0.4);
+  }
+
+  .navbar-label {
+    @apply text-[9px] leading-tight transition-all duration-200;
+  }
+}
+
+/* === UTILITY: hide scrollbar === */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* === PHONE FRAME CONTAINER === */
+.phone-frame {
+  width: 100%;
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #E3F2FD 0%, #FFFFFF 50%, #F1F8E9 100%);
+}
+
+@media (min-width: 769px) {
+  .phone-frame {
+    max-width: 430px;
+    width: 430px;
+    height: 100dvh;
+    max-height: 932px;
+    min-height: auto;
+    border-radius: 2.5rem;
     overflow: hidden;
+    box-shadow:
+      0 0 0 8px #1f2937,
+      0 25px 60px -12px rgba(0, 0, 0, 0.5),
+      0 0 80px -20px rgba(99, 102, 241, 0.15);
+    position: relative;
+  }
+}
+
+.phone-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 769px) {
+  .phone-screen {
+    min-height: auto;
+    height: 100%;
+  }
+}
+
+/* Hide scrollbar inside phone frame for cleaner look */
+.phone-screen>div:first-child {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.phone-screen>div:first-child::-webkit-scrollbar {
+  width: 3px;
+}
+
+.phone-screen>div:first-child::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phone-screen>div:first-child::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+/* ==========================================
+   PLAY ZONE - Game Hub Styles
+   ========================================== */
+
+/* Animated gradient background */
+.play-zone-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+      #E8F5E9 0%,
+      #E3F2FD 25%,
+      #F3E5F5 50%,
+      #FFF3E0 75%,
+      #E8F5E9 100%);
+  background-size: 400% 400%;
+  animation: play-zone-gradient 12s ease infinite;
+  z-index: 0;
+}
+
+@keyframes play-zone-gradient {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
   }
 
-  .progress-fill {
-    background-color: hsl(var(--progress-fill));
-    height: 100%;
-    transition: all 0.5s ease;
-    border-radius: 9999px;
+  25% {
+    background-position: 100% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+/* Floating particles container */
+.play-zone-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Individual particle */
+.play-zone-particle {
+  position: absolute;
+  top: -20px;
+  animation: play-zone-float linear infinite;
+}
+
+@keyframes play-zone-float {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translateY(50vh) rotate(180deg) scale(1.2);
+    opacity: 0.2;
+  }
+
+  90% {
+    opacity: 0.1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(360deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Game selection card */
+.game-select-card {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game-card-hidden {
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+}
+
+.game-card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Game card icon floating animation */
+.game-card-icon-float {
+  animation: game-icon-float 3s ease-in-out infinite;
+}
+
+@keyframes game-icon-float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-5px) rotate(2deg);
   }
 }

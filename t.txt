@@ -1,0 +1,107 @@
+
+
+Layout: Two-column academic conference format
+
+Alignment:
+
+Title → Centered
+
+Authors → Centered
+
+Affiliations → Centered
+
+Abstract heading → Left aligned
+
+Body text → Justified
+
+Theme: Standard IEEE/ACL/academic conference style (very similar to LaTeX default styles)
+
+🔠 Fonts Used (Most Likely)
+
+This document is almost certainly created in LaTeX, using default Computer Modern fonts.
+
+1️⃣ Title Font
+
+Font Family: Computer Modern Roman (or Times-like if overridden)
+
+Weight: Bold
+
+Case: Title Case
+
+Size: Large (approx. 18–22 pt equivalent)
+
+Style: Serif
+
+2️⃣ Author Names
+
+Font Family: Computer Modern Roman
+
+Style: Italic
+
+Weight: Regular
+
+Superscripts: Affiliation numbers in superscript
+
+Alignment: Centered
+
+Example style:
+
+Ritesh Kumar¹², Meiraba Takhellambam³ ...
+3️⃣ Affiliations
+
+Font Family: Computer Modern Roman
+
+Style: Regular (non-italic)
+
+Superscripts: Used for numbering institutions
+
+Size: Slightly smaller than author names
+
+Alignment: Centered
+
+4️⃣ Email Address
+
+Font Family: Monospaced (likely Computer Modern Typewriter)
+
+Style: Regular
+
+Spacing: Slight letter spacing typical of typewriter font
+
+Size: Smaller than body text
+
+Example:
+
+riteshkr.kmi@gmail.com
+5️⃣ Section Heading (“Abstract”)
+
+Font Family: Computer Modern Roman
+
+Weight: Bold
+
+Style: Regular (not italic)
+
+Size: Larger than body text
+
+Alignment: Left aligned
+
+6️⃣ Body Text
+
+Font Family: Computer Modern Roman
+
+Weight: Regular
+
+Alignment: Justified
+
+Column Layout: Two-column
+
+Line Spacing: Tight (conference style)
+
+Paragraphs: No indentation in abstract; standard paragraph formatting in body
+
+7️⃣ Bullet Points (Right Column)
+
+Standard LaTeX bullet style
+
+Same serif font as body
+
+Hanging indentation

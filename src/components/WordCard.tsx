@@ -22,10 +22,12 @@ export const WordCard = ({ word, onClick, showTransliteration = false }: WordCar
         />
         <div className="text-center space-y-2">
           <h3 className="text-2xl font-semibold text-primary">{word.toto}</h3>
-          {showTransliteration && (
+          {showTransliteration && word.transliteration && word.transliteration.trim() !== '' && (
             <p className="text-sm text-muted-foreground italic">({word.transliteration})</p>
           )}
-          <p className="text-lg text-foreground">{word.english}</p>
+          {word.toto !== word.english && (
+            <p className="text-lg text-foreground">{word.english}</p>
+          )}
         </div>
         <div className="flex gap-4">
           <AudioPlayer

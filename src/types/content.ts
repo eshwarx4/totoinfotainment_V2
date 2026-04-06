@@ -6,7 +6,7 @@ export interface WordItem {
   imageUrl: string;
   audioToto: string;
   audioEnglish: string;
-  category: 'Food' | 'Animals' | 'Plants' | 'Objects' | 'Nature' | 'Body';
+  category: string; // any category from word data
   usageSentenceToto?: string;
   usageSentenceEnglish?: string;
 }

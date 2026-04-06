@@ -1,20 +1,25 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Star, Loader2 } from "lucide-react";
+import { Check, Star, Loader2 } from "lucide-react";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useState, useEffect } from "react";
 import { WordItem } from "@/types/content";
+import { useCoins } from "@/contexts/CoinContext";
+import { COIN_REWARDS } from "@/types/gamification";
+import { CoinPopup } from "@/components/effects/CoinPopup";
 import { fetchWordById } from "@/lib/supabaseQueries";
 import { transformWordRowToWordItem } from "@/lib/dataTransformers";
 
 export default function WordDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const coinSystem = useCoins();
   const [word, setWord] = useState<WordItem | null>(null);
   const [isLearned, setIsLearned] = useState(false);
   const [showTransliteration, setShowTransliteration] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [coinPopup, setCoinPopup] = useState<number | null>(null);
 
   useEffect(() => {
     const loadWord = async () => {
@@ -25,10 +30,7 @@ export default function WordDetail() {
         if (wordRow) {
           const transformedWord = transformWordRowToWordItem(wordRow);
           setWord(transformedWord);
-          
-          // Check if word is already learned
-          const learned = JSON.parse(localStorage.getItem('learnedWords') || '[]');
-          setIsLearned(learned.includes(id));
+          setIsLearned(coinSystem.learnedWords.includes(id));
         }
       } catch (error) {
         console.error('Failed to load word:', error);
@@ -57,26 +59,16 @@ export default function WordDetail() {
   }
 
   const handleMarkLearned = () => {
+    coinSystem.learnWord(word.id);
     setIsLearned(true);
-    // Save to localStorage
-    const learned = JSON.parse(localStorage.getItem('learnedWords') || '[]');
-    if (!learned.includes(word.id)) {
-      learned.push(word.id);
-      localStorage.setItem('learnedWords', JSON.stringify(learned));
-    }
+    setCoinPopup(COIN_REWARDS.LEARN_WORD);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
-      </header>
-
+    <>
+      {coinPopup !== null && (
+        <CoinPopup amount={coinPopup} onDone={() => setCoinPopup(null)} />
+      )}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <Card className="card-elevated animate-fade-in">
           <CardHeader>
@@ -93,10 +85,12 @@ export default function WordDetail() {
 
             <div className="text-center space-y-3">
               <h2 className="text-4xl font-bold text-primary">{word.toto}</h2>
-              {showTransliteration && (
+              {showTransliteration && word.transliteration && word.transliteration.trim() !== '' && (
                 <p className="text-xl text-muted-foreground italic">({word.transliteration})</p>
               )}
-              <p className="text-2xl text-foreground">{word.english}</p>
+              {word.toto !== word.english && (
+                <p className="text-2xl text-foreground">{word.english}</p>
+              )}
             </div>
 
             <div className="flex justify-center gap-8">
@@ -144,7 +138,7 @@ export default function WordDetail() {
                 ) : (
                   <>
                     <Star className="h-5 w-5" />
-                    Mark as Learned
+                    Mark as Learned (+{COIN_REWARDS.LEARN_WORD} coins)
                   </>
                 )}
               </Button>
@@ -160,6 +154,6 @@ export default function WordDetail() {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </>
   );
 }

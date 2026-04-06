@@ -2,44 +2,123 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
-import WordDetail from "./pages/WordDetail";
-import Words from "./pages/Words";
-import Stories from "./pages/Stories";
-import StoryViewer from "./pages/StoryViewer";
-import Quizzes from "./pages/Quizzes";
-import Progress from "./pages/Progress";
-import Settings from "./pages/Settings";
-import AboutToto from "./pages/AboutToto";
-import Cultural from "./pages/Cultural";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { GameProvider } from "@/state/GameContext";
+import AppShell from "@/components/layout/AppShell";
+
+// Screens — Onboarding (no navbar)
+import Welcome from "./screens/Welcome";
+import ProfileSetup from "./screens/ProfileSetup";
+import Tutorial from "./screens/Tutorial";
+
+// Screens — Main tabs (with navbar)
+import MapScreen from "./screens/MapScreen";
+import LearnTab from "./screens/LearnTab";
+import PlayTab from "./screens/PlayTab";
+import LeaderboardTab from "./screens/LeaderboardTab";
+import ChatbotTab from "./screens/ChatbotTab";
+import ProfileTab from "./screens/ProfileTab";
+
+// Screens — Learn sub-pages (with navbar)
+import CategoryWords from "./screens/CategoryWords";
+import ConceptViewer from "./screens/ConceptViewer";
+
+// Screens — Sub-pages (with navbar)
+import WorldScreen from "./screens/WorldScreen";
+import ProgressScreen from "./screens/ProgressScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+
+// Screens — Game flow (no navbar — fullscreen)
+import LevelIntro from "./screens/LevelIntro";
+import GameScreen from "./screens/GameScreen";
+import LevelComplete from "./screens/LevelComplete";
+import StoryScreen from "./screens/StoryScreen";
+import CulturalReward from "./screens/CulturalReward";
+
+// Screens — Play Zone games (fullscreen)
+import PuzzleGame from "./components/play/puzzle/PuzzleGame";
+import RunnerGame from "./components/play/runner/RunnerGame";
+import TreasureHunt from "./components/play/treasure/TreasureHunt";
+import BlockBuilder from "./components/play/block/BlockBuilder";
+import WordFinder from "./components/play/wordfinder/WordFinder";
+import QuickChallenge from "./components/play/challenge/QuickChallenge";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+/** Wrapper for screens that show the bottom navbar */
+function WithNavbar({ children }: { children: React.ReactNode }) {
+  return <AppShell>{children}</AppShell>;
+}
+
+/** Wrapper for fullscreen screens (no navbar, but still in phone frame on desktop) */
+function WithFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="phone-frame">
+      <div className="phone-screen">
+        <div className="flex-1 overflow-y-auto">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/word/:id" element={<WordDetail />} />
-          <Route path="/words" element={<Words />} />
-          <Route path="/stories" element={<Stories />} />
-          <Route path="/story/:id" element={<StoryViewer />} />
-          <Route path="/quizzes" element={<Quizzes />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/about" element={<AboutToto />} />
-          <Route path="/cultural" element={<Cultural />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <GameProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* === Onboarding (no navbar) === */}
+            <Route path="/" element={<WithFrame><Welcome /></WithFrame>} />
+            <Route path="/profile" element={<WithFrame><ProfileSetup /></WithFrame>} />
+            <Route path="/tutorial" element={<WithFrame><Tutorial /></WithFrame>} />
+
+            {/* === Main tabs (with navbar) === */}
+            <Route path="/map" element={<WithNavbar><MapScreen /></WithNavbar>} />
+            <Route path="/learn" element={<WithNavbar><LearnTab /></WithNavbar>} />
+            <Route path="/play" element={<WithNavbar><PlayTab /></WithNavbar>} />
+            <Route path="/leaderboard" element={<WithNavbar><LeaderboardTab /></WithNavbar>} />
+            <Route path="/chatbot" element={<WithNavbar><ChatbotTab /></WithNavbar>} />
+            <Route path="/profile-tab" element={<WithNavbar><ProfileTab /></WithNavbar>} />
+
+            {/* === Learn sub-pages (with navbar) === */}
+            <Route path="/learn/category/:category" element={<WithNavbar><CategoryWords /></WithNavbar>} />
+            <Route path="/learn/concept/:conceptId" element={<WithNavbar><ConceptViewer /></WithNavbar>} />
+
+            {/* === Sub-pages (with navbar) === */}
+            <Route path="/world/:worldId" element={<WithNavbar><WorldScreen /></WithNavbar>} />
+            <Route path="/progress" element={<WithNavbar><ProgressScreen /></WithNavbar>} />
+            <Route path="/settings" element={<WithNavbar><SettingsScreen /></WithNavbar>} />
+
+            {/* === Game flow (phone frame, no navbar — fullscreen immersive) === */}
+            <Route path="/level/:worldId/:levelNum/intro" element={<WithFrame><LevelIntro /></WithFrame>} />
+            <Route path="/level/:worldId/:levelNum/game/:gameNum" element={<WithFrame><GameScreen /></WithFrame>} />
+            <Route path="/level/:worldId/:levelNum/complete" element={<WithFrame><LevelComplete /></WithFrame>} />
+            <Route path="/story/:worldId/:storyType" element={<WithFrame><StoryScreen /></WithFrame>} />
+            <Route path="/cultural/:worldId" element={<WithFrame><CulturalReward /></WithFrame>} />
+
+            {/* === Play Zone games (phone frame, fullscreen) === */}
+            <Route path="/play/puzzle" element={<WithFrame><PuzzleGame /></WithFrame>} />
+            <Route path="/play/runner" element={<WithFrame><RunnerGame /></WithFrame>} />
+            <Route path="/play/treasure" element={<WithFrame><TreasureHunt /></WithFrame>} />
+            <Route path="/play/blocks" element={<WithFrame><BlockBuilder /></WithFrame>} />
+            <Route path="/play/wordfinder" element={<WithFrame><WordFinder /></WithFrame>} />
+            <Route path="/play/challenge" element={<WithFrame><QuickChallenge /></WithFrame>} />
+
+            {/* === Legacy redirects === */}
+            <Route path="/dashboard" element={<Navigate to="/map" replace />} />
+            <Route path="/words" element={<Navigate to="/map" replace />} />
+            <Route path="/stories" element={<Navigate to="/map" replace />} />
+            <Route path="/quizzes" element={<Navigate to="/map" replace />} />
+            <Route path="/games" element={<Navigate to="/map" replace />} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </GameProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

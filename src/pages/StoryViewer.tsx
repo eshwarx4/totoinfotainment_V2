@@ -4,6 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { CoinPopup } from "@/components/effects/CoinPopup";
+import { useCoins } from "@/contexts/CoinContext";
+import { COIN_REWARDS } from "@/types/gamification";
 import { Story } from "@/types/content";
 import { fetchConcepts, fetchConceptSlides, fetchStories } from "@/lib/supabaseQueries";
 import { transformConceptToStory, transformStoryRowToStory } from "@/lib/dataTransformers";
@@ -11,10 +14,12 @@ import { transformConceptToStory, transformStoryRowToStory } from "@/lib/dataTra
 export default function StoryViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const coinSystem = useCoins();
   const [story, setStory] = useState<Story | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showTransliteration, setShowTransliteration] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [coinPopup, setCoinPopup] = useState<number | null>(null);
 
   useEffect(() => {
     const loadStory = async () => {
@@ -72,7 +77,11 @@ export default function StoryViewer() {
 
   const handleNext = () => {
     if (isLastSlide) {
-      navigate('/stories');
+      if (id) {
+        coinSystem.completeStory(id);
+        setCoinPopup(COIN_REWARDS.COMPLETE_STORY);
+      }
+      setTimeout(() => navigate('/stories'), 1500);
     } else {
       setCurrentSlide(currentSlide + 1);
     }
@@ -86,6 +95,9 @@ export default function StoryViewer() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {coinPopup !== null && (
+        <CoinPopup amount={coinPopup} onDone={() => setCoinPopup(null)} />
+      )}
       <Card className="max-w-4xl w-full animate-fade-in">
         <CardContent className="p-8 space-y-6">
           <div className="flex items-center justify-between">

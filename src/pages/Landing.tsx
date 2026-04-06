@@ -7,19 +7,24 @@ import mascotImage from "@/assets/toto-mascot.png";
 
 const tutorialSteps = [
   {
-    title: "Play Audio",
-    description: "Tap the Toto or English buttons to hear words and stories in both languages",
-    icon: "🎵"
+    title: "Earn Coins",
+    description: "Learn words, play games, and complete stories to earn coins",
+    icon: "🪙"
+  },
+  {
+    title: "Explore the Village",
+    description: "Unlock new areas on the Totopara village map by spending coins",
+    icon: "🗺️"
+  },
+  {
+    title: "Play Games",
+    description: "Word Match, Picture Quiz, Listening Game, and Spelling Bee await you!",
+    icon: "🎮"
   },
   {
     title: "Learn Stories",
     description: "Explore fun stories about science, culture, and general knowledge",
     icon: "📚"
-  },
-  {
-    title: "Take Quizzes",
-    description: "Test your knowledge and earn stars for correct answers",
-    icon: "⭐"
   }
 ];
 
@@ -34,14 +39,14 @@ export default function Landing() {
   };
 
   const handleSkipTutorial = () => {
-    navigate('/dashboard');
+    navigate('/map');
   };
 
   const handleNextStep = () => {
     if (tutorialStep < tutorialSteps.length - 1) {
       setTutorialStep(tutorialStep + 1);
     } else {
-      navigate('/dashboard');
+      navigate('/map');
     }
   };
 
@@ -60,7 +65,7 @@ export default function Landing() {
             <div className="text-6xl text-center">{step.icon}</div>
             <h2 className="text-3xl font-bold text-center text-primary">{step.title}</h2>
             <p className="text-lg text-center text-muted-foreground">{step.description}</p>
-            
+
             <div className="flex items-center justify-between gap-4 pt-4">
               <Button
                 variant="outline"
@@ -70,7 +75,7 @@ export default function Landing() {
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
-              
+
               <div className="flex gap-2">
                 {tutorialSteps.map((_, index) => (
                   <div

@@ -103,10 +103,12 @@ export const SwipeableWordCard = ({
 
           <div className="text-center space-y-3">
             <h3 className="text-4xl font-bold text-primary">{word.toto}</h3>
-            {showTransliteration && (
+            {showTransliteration && word.transliteration && word.transliteration.trim() !== '' && (
               <p className="text-lg text-muted-foreground italic">({word.transliteration})</p>
             )}
-            <p className="text-2xl text-foreground font-medium">{word.english}</p>
+            {word.toto !== word.english && (
+              <p className="text-2xl text-foreground font-medium">{word.english}</p>
+            )}
           </div>
 
           {word.usageSentenceToto && (
