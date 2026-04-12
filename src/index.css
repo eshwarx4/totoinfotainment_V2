@@ -389,21 +389,12 @@
 
 /* Hide scrollbar inside phone frame for cleaner look */
 .phone-screen>div:first-child {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .phone-screen>div:first-child::-webkit-scrollbar {
-  width: 3px;
-}
-
-.phone-screen>div:first-child::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.phone-screen>div:first-child::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+  display: none;
 }
 
 /* ==========================================
@@ -1861,6 +1852,12 @@
   padding-bottom: 120px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.candy-map-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* World section */
