@@ -54,12 +54,12 @@ export default function BottomNavbar() {
             >
               <div className={`navbar-icon-wrap ${isActive ? 'navbar-icon-active' : ''}`}>
                 <Icon
-                  className={`w-[18px] h-[18px] transition-all duration-200 ${isActive ? 'text-white' : 'text-gray-400'
+                  className={`w-5 h-5 transition-all duration-200 ${isActive ? 'text-white' : 'text-gray-400'
                     }`}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               </div>
-              <span className={`navbar-label ${isActive ? 'text-game-primary font-bold' : 'text-gray-400 font-medium'
+              <span className={`navbar-label ${isActive ? 'text-game-primary font-semibold' : 'text-gray-400 font-medium'
                 }`}>
                 {label}
               </span>

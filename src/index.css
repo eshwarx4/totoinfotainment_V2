@@ -291,11 +291,11 @@
   /* === BOTTOM NAVBAR === */
   .navbar-bottom {
     @apply fixed bottom-0 left-0 right-0 z-50;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 -4px 20px -4px rgba(0, 0, 0, 0.06);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -4px 20px -4px rgba(0, 0, 0, 0.08);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
@@ -310,12 +310,15 @@
   }
 
   .navbar-inner {
-    @apply mx-auto flex items-center justify-around px-1 py-1;
+    @apply mx-auto flex items-center justify-between px-2 py-2;
+    max-width: 100%;
   }
 
   .navbar-tab {
-    @apply flex flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-xl transition-all duration-200 ease-out active:scale-90;
-    min-width: 44px;
+    @apply flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-xl transition-all duration-200 ease-out active:scale-95;
+    flex: 1;
+    max-width: 70px;
+    min-width: 0;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -328,7 +331,7 @@
   }
 
   .navbar-icon-wrap {
-    @apply w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200;
+    @apply w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200;
   }
 
   .navbar-icon-active {
@@ -337,7 +340,11 @@
   }
 
   .navbar-label {
-    @apply text-[9px] leading-tight transition-all duration-200;
+    @apply text-[8px] leading-tight transition-all duration-200 text-center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

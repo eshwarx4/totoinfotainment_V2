@@ -130,13 +130,13 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.appLanguage': 'অ্যাপের ভাষা',
     'settings.changeLanguage': 'অ্যাপের ভাষা পরিবর্তন করো',
 
-    // Navigation
-    'nav.learn': 'শেখো',
-    'nav.journey': 'যাত্রা',
-    'nav.play': 'খেলো',
-    'nav.ranking': 'র‍্যাঙ্কিং',
-    'nav.chatbot': 'চ্যাটবট',
-    'nav.profile': 'প্রোফাইল',
+    // Navigation (keep short for navbar)
+    'nav.learn': 'শেখা',
+    'nav.journey': 'ম্যাপ',
+    'nav.play': 'খেলা',
+    'nav.ranking': 'র‍্যাঙ্ক',
+    'nav.chatbot': 'চ্যাট',
+    'nav.profile': 'আমি',
 
     // Common
     'common.coinsToNext': 'কয়েন পরবর্তী লেভেলে',
