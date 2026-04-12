@@ -18,6 +18,7 @@ const TABS: NavTab[] = [
   { id: 'profile', labelKey: 'nav.profile', icon: User, path: '/profile-tab' },
 ];
 
+// Fixed navbar v2 - responsive with shorter labels
 export default function BottomNavbar() {
   const location = useLocation();
   const navigate = useNavigate();

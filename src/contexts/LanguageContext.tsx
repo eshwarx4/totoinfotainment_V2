@@ -66,13 +66,13 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.appLanguage': 'App Language',
     'settings.changeLanguage': 'Change app language',
 
-    // Navigation
+    // Navigation (keep short for navbar)
     'nav.learn': 'Learn',
-    'nav.journey': 'Journey',
+    'nav.journey': 'Map',
     'nav.play': 'Play',
-    'nav.ranking': 'Ranking',
-    'nav.chatbot': 'Chatbot',
-    'nav.profile': 'Profile',
+    'nav.ranking': 'Rank',
+    'nav.chatbot': 'Chat',
+    'nav.profile': 'Me',
 
     // Common
     'common.coinsToNext': 'coins to next',
