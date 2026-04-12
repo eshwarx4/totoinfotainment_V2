@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/state/GameContext';
 import { useEffect, useState, useRef } from 'react';
 import { Mic, MicOff, Trash2 } from 'lucide-react';
+import mascotImage from '@/assets/toto-mascot.png';
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -103,7 +104,11 @@ export default function Welcome() {
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-game-primary/10 rounded-full blur-2xl scale-150" />
           <div className="relative">
-            <div className="text-[80px] leading-none mascot-bounce select-none">🦉</div>
+            <img
+              src={mascotImage}
+              alt="Toto Mascot"
+              className="w-24 h-24 object-contain mascot-bounce select-none"
+            />
             {showInput && (
               <div className="absolute -top-2 -right-4 bg-white rounded-2xl px-3 py-1.5 shadow-game text-sm font-bold text-game-primary animate-fade-in">
                 Hello! 👋

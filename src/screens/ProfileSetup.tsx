@@ -22,7 +22,8 @@ export default function ProfileSetup() {
 
   const handleComplete = () => {
     if (!name.trim()) return;
-    setProfile(name.trim(), role);
+    // Pass the selected avatar to setProfile
+    setProfile(name.trim(), role, AVATARS[selectedAvatar]);
     navigate('/tutorial');
   };
 
