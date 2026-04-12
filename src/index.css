@@ -1800,3 +1800,591 @@
     border-color: inherit;
   }
 }
+
+/* ==========================================
+   CANDY CRUSH STYLE MAP - 3D Effects
+   ========================================== */
+
+/* Main container */
+.candy-map-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fixed header */
+.candy-map-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.candy-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.candy-currency {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+}
+
+/* Scrollable map area */
+.candy-map-scroll {
+  padding-bottom: 100px;
+  overflow-y: auto;
+}
+
+/* World section */
+.candy-world-section {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.candy-world-bg {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  overflow: hidden;
+}
+
+.candy-world-locked {
+  filter: grayscale(0.6) brightness(0.7);
+}
+
+.candy-world-locked .candy-world-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+/* World decorations */
+.candy-world-decorations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Floating particles */
+.candy-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: candy-float 4s ease-in-out infinite;
+}
+
+.candy-particle-1 {
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.candy-particle-2 {
+  top: 50%;
+  right: 20%;
+  animation-delay: 1.5s;
+  width: 6px;
+  height: 6px;
+}
+
+.candy-particle-3 {
+  bottom: 30%;
+  left: 30%;
+  animation-delay: 3s;
+  width: 10px;
+  height: 10px;
+}
+
+@keyframes candy-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* World banner */
+.candy-world-banner {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* World connector */
+.candy-world-connector {
+  position: relative;
+  height: 40px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.candy-connector-arrow {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: candy-bounce-down 1.5s ease-in-out infinite;
+}
+
+@keyframes candy-bounce-down {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* Map end */
+.candy-map-end {
+  text-align: center;
+  padding: 60px 20px;
+  background: linear-gradient(180deg, transparent, rgba(255, 215, 0, 0.1));
+}
+
+/* ==========================================
+   CANDY LEVEL NODES - 3D Style
+   ========================================== */
+
+.candy-level-wrapper {
+  z-index: 15;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.candy-level-wrapper:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.candy-level-wrapper:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Base node style */
+.candy-node {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* 3D highlight effect */
+.candy-node-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  border-radius: 50% 50% 0 0;
+  pointer-events: none;
+}
+
+/* 3D shadow effect */
+.candy-node-shadow {
+  position: absolute;
+  bottom: -4px;
+  left: 4px;
+  right: 4px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  filter: blur(4px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Current level - pulsing */
+.candy-node-current {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: white;
+  box-shadow:
+    0 4px 0 #15803d,
+    0 8px 20px rgba(34, 197, 94, 0.5);
+  animation: candy-pulse 2s ease-in-out infinite;
+}
+
+.candy-node-glow {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74, 222, 128, 0.4) 0%, transparent 70%);
+  animation: candy-glow-pulse 2s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+@keyframes candy-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 4px 0 #15803d,
+      0 8px 20px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow:
+      0 4px 0 #15803d,
+      0 12px 30px rgba(34, 197, 94, 0.6);
+  }
+}
+
+@keyframes candy-glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* Completed level */
+.candy-node-completed {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: white;
+  box-shadow:
+    0 4px 0 #1d4ed8,
+    0 6px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Unlocked but not played */
+.candy-node-unlocked {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #78350f;
+  box-shadow:
+    0 4px 0 #b45309,
+    0 6px 15px rgba(245, 158, 11, 0.4);
+}
+
+/* Locked level */
+.candy-node-locked {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: #9ca3af;
+  box-shadow:
+    0 4px 0 #374151,
+    0 4px 10px rgba(0, 0, 0, 0.3);
+  opacity: 0.7;
+}
+
+/* Stars display */
+.candy-stars {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+  justify-content: center;
+}
+
+/* Level label */
+.candy-level-label {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ==========================================
+   CANDY MAP RESPONSIVE
+   ========================================== */
+
+@media (min-width: 640px) {
+  .candy-node {
+    width: 64px;
+    height: 64px;
+    font-size: 20px;
+  }
+
+  .candy-world-bg {
+    height: 480px;
+  }
+}
+
+/* ==========================================
+   CANDY MAP BONUS ANIMATIONS
+   ========================================== */
+
+/* Sparkle effect for new unlocks */
+@keyframes candy-sparkle {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.candy-sparkle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #fff 0%, transparent 70%);
+  animation: candy-sparkle 0.8s ease-out forwards;
+}
+
+/* Level unlock animation */
+@keyframes candy-unlock {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.candy-level-unlock {
+  animation: candy-unlock 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Star earn animation */
+@keyframes candy-star-earn {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.3) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.candy-star-earn {
+  animation: candy-star-earn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ==========================================
+   CANDY MAP - Additional Polish
+   ========================================== */
+
+/* Ensure map fills screen properly */
+.candy-map-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.candy-map-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* World detail page */
+.candy-world-detail {
+  position: relative;
+  background: transparent;
+}
+
+/* Enhanced world backgrounds with depth */
+.candy-world-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(0,0,0,0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Shimmer effect for unlocked worlds */
+.candy-world-section:not(.candy-world-locked) .candy-world-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.1) 50%,
+    transparent 100%
+  );
+  animation: candy-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes candy-shimmer {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 200%;
+  }
+}
+
+/* Enhanced node shadows for 3D depth */
+.candy-node::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Bouncing animation for current level */
+.candy-node-current {
+  animation: candy-bounce 1s ease-in-out infinite, candy-pulse 2s ease-in-out infinite;
+}
+
+@keyframes candy-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Trophy glow for completed worlds */
+.candy-world-section:not(.candy-world-locked) .candy-world-banner::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, transparent 50%, rgba(255,215,0,0.2) 100%);
+  z-index: -1;
+  opacity: 0;
+  animation: candy-trophy-glow 3s ease-in-out infinite;
+}
+
+@keyframes candy-trophy-glow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Stars twinkle animation */
+.candy-stars .fill-yellow-400 {
+  animation: candy-twinkle 2s ease-in-out infinite;
+}
+
+.candy-stars .fill-yellow-400:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.candy-stars .fill-yellow-400:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes candy-twinkle {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 2px rgba(250, 204, 21, 0.5));
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 6px rgba(250, 204, 21, 0.8));
+  }
+}
+
+/* Progress trail glow */
+.candy-world-section:not(.candy-world-locked) svg path:first-child {
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
+}
+
+/* Level hover lift effect */
+.candy-level-wrapper:not(:disabled):hover .candy-node {
+  box-shadow:
+    0 6px 0 currentColor,
+    0 12px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  .candy-node {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .candy-world-bg {
+    height: 380px;
+  }
+
+  .candy-level-label {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}

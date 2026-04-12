@@ -1,16 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Map, BookOpen, Trophy, MessageCircle, User, Gamepad2 } from 'lucide-react';
+import { MapPin, BookOpen, Trophy, MessageCircle, User, Gamepad2 } from 'lucide-react';
 
 interface NavTab {
   id: string;
   label: string;
-  icon: typeof Map;
+  icon: typeof MapPin;
   path: string;
 }
 
 const TABS: NavTab[] = [
   { id: 'learn', label: 'Learn', icon: BookOpen, path: '/learn' },
-  { id: 'games', label: 'Games', icon: Map, path: '/map' },
+  { id: 'games', label: 'Journey', icon: MapPin, path: '/map' },
   { id: 'play', label: 'Play', icon: Gamepad2, path: '/play' },
   { id: 'leaderboard', label: 'Ranking', icon: Trophy, path: '/leaderboard' },
   { id: 'chatbot', label: 'Chatbot', icon: MessageCircle, path: '/chatbot' },
