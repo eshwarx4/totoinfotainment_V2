@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '@/state/GameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 const AVATARS = ['🦉', '🐯', '🦋', '🐘', '🦜', '🐒'];
 
@@ -8,14 +10,15 @@ export default function ProfileSetup() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setProfile } = useGame();
+  const { t } = useLanguage();
 
   // Get name from Welcome page if passed
   const passedName = (location.state as any)?.name || '';
   const [name, setName] = useState(passedName);
   const [role, setRole] = useState<'child' | 'teacher'>('child');
   const [selectedAvatar, setSelectedAvatar] = useState(0);
-  // If name was pre-filled, skip to step 2
-  const [step, setStep] = useState(passedName ? 2 : 1);
+  // Start with language selection (step 1), if name was pre-filled skip name step
+  const [step, setStep] = useState(1);
 
   const handleComplete = () => {
     if (!name.trim()) return;
@@ -23,11 +26,22 @@ export default function ProfileSetup() {
     navigate('/tutorial');
   };
 
+  const totalSteps = passedName ? 3 : 4; // Language, (Name if needed), Role, Avatar
+
+  const getActualStep = () => {
+    if (passedName) {
+      // Steps: 1=Language, 2=Role, 3=Avatar
+      return step;
+    }
+    // Steps: 1=Language, 2=Name, 3=Role, 4=Avatar
+    return step;
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 screen-enter">
       {/* Step indicator */}
       <div className="flex gap-2 mb-8">
-        {[1, 2, 3].map(s => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
           <div
             key={s}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${s <= step ? 'bg-game-primary scale-110' : 'bg-game-locked'
@@ -36,16 +50,30 @@ export default function ProfileSetup() {
         ))}
       </div>
 
+      {/* Step 1: Language Selection */}
       {step === 1 && (
         <div className="w-full max-w-sm animate-fade-in-scale text-center">
+          <LanguageSelector showTitle={true} />
+          <button
+            onClick={() => setStep(2)}
+            className="btn-game-primary mt-6 w-full"
+          >
+            {t('profile.next')} →
+          </button>
+        </div>
+      )}
+
+      {/* Step 2: Name (only if not passed) */}
+      {step === 2 && !passedName && (
+        <div className="w-full max-w-sm animate-fade-in-scale text-center">
           <div className="text-6xl mb-6">👋</div>
-          <h2 className="text-2xl font-bold mb-2">What's your name?</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('welcome.whatsYourName')}</h2>
           <p className="text-muted-foreground mb-6">We'll use this in your adventure!</p>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Your name..."
+            placeholder={t('welcome.enterName')}
             className="w-full text-center text-xl font-semibold px-6 py-4 rounded-2xl
                        border-2 border-border bg-white focus:border-game-primary
                        focus:outline-none transition-colors"
@@ -53,20 +81,21 @@ export default function ProfileSetup() {
             autoFocus
           />
           <button
-            onClick={() => name.trim() && setStep(2)}
+            onClick={() => name.trim() && setStep(3)}
             disabled={!name.trim()}
             className="btn-game-primary mt-6 w-full disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next →
+            {t('profile.next')} →
           </button>
         </div>
       )}
 
-      {step === 2 && (
+      {/* Step 2 (if name passed) or Step 3: Role */}
+      {((step === 2 && passedName) || (step === 3 && !passedName)) && (
         <div className="w-full max-w-sm animate-fade-in-scale text-center">
           <div className="text-6xl mb-6">🎓</div>
-          <h2 className="text-2xl font-bold mb-2">I am a...</h2>
-          <p className="text-muted-foreground mb-6">This helps us personalize your experience</p>
+          <h2 className="text-2xl font-bold mb-2">{t('profile.iAmA')}</h2>
+          <p className="text-muted-foreground mb-6">{t('profile.personalizeExp')}</p>
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setRole('child')}
@@ -74,8 +103,8 @@ export default function ProfileSetup() {
                 }`}
             >
               <div className="text-5xl mb-3">👧</div>
-              <div className="font-bold text-lg">Student</div>
-              <div className="text-sm text-muted-foreground">I want to learn!</div>
+              <div className="font-bold text-lg">{t('profile.student')}</div>
+              <div className="text-sm text-muted-foreground">{t('profile.studentDesc')}</div>
             </button>
             <button
               onClick={() => setRole('teacher')}
@@ -83,24 +112,25 @@ export default function ProfileSetup() {
                 }`}
             >
               <div className="text-5xl mb-3">👨‍🏫</div>
-              <div className="font-bold text-lg">Teacher</div>
-              <div className="text-sm text-muted-foreground">I want to teach!</div>
+              <div className="font-bold text-lg">{t('profile.teacher')}</div>
+              <div className="text-sm text-muted-foreground">{t('profile.teacherDesc')}</div>
             </button>
           </div>
           <button
-            onClick={() => setStep(3)}
+            onClick={() => setStep(passedName ? 3 : 4)}
             className="btn-game-primary mt-6 w-full"
           >
-            Next →
+            {t('profile.next')} →
           </button>
         </div>
       )}
 
-      {step === 3 && (
+      {/* Step 3 (if name passed) or Step 4: Avatar */}
+      {((step === 3 && passedName) || (step === 4 && !passedName)) && (
         <div className="w-full max-w-sm animate-fade-in-scale text-center">
           <div className="text-6xl mb-4">{AVATARS[selectedAvatar]}</div>
-          <h2 className="text-2xl font-bold mb-2">Pick your buddy!</h2>
-          <p className="text-muted-foreground mb-6">Choose a companion for your journey</p>
+          <h2 className="text-2xl font-bold mb-2">{t('profile.pickBuddy')}</h2>
+          <p className="text-muted-foreground mb-6">{t('profile.chooseBuddy')}</p>
           <div className="grid grid-cols-3 gap-3 mb-6">
             {AVATARS.map((avatar, i) => (
               <button
@@ -119,18 +149,18 @@ export default function ProfileSetup() {
             onClick={handleComplete}
             className="btn-game-primary w-full text-xl"
           >
-            Start Adventure! 🎉
+            {t('welcome.startAdventure')} 🎉
           </button>
         </div>
       )}
 
-      {/* Back button for steps 2-3 */}
+      {/* Back button for steps 2+ */}
       {step > 1 && (
         <button
           onClick={() => setStep(step - 1)}
           className="mt-4 text-muted-foreground font-semibold hover:text-foreground transition-colors"
         >
-          ← Back
+          ← {t('profile.back')}
         </button>
       )}
     </div>

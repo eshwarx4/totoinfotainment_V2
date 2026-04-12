@@ -1,25 +1,27 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, BookOpen, Trophy, MessageCircle, User, Gamepad2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface NavTab {
   id: string;
-  label: string;
+  labelKey: string;
   icon: typeof MapPin;
   path: string;
 }
 
 const TABS: NavTab[] = [
-  { id: 'learn', label: 'Learn', icon: BookOpen, path: '/learn' },
-  { id: 'games', label: 'Journey', icon: MapPin, path: '/map' },
-  { id: 'play', label: 'Play', icon: Gamepad2, path: '/play' },
-  { id: 'leaderboard', label: 'Ranking', icon: Trophy, path: '/leaderboard' },
-  { id: 'chatbot', label: 'Chatbot', icon: MessageCircle, path: '/chatbot' },
-  { id: 'profile', label: 'Profile', icon: User, path: '/profile-tab' },
+  { id: 'learn', labelKey: 'nav.learn', icon: BookOpen, path: '/learn' },
+  { id: 'games', labelKey: 'nav.journey', icon: MapPin, path: '/map' },
+  { id: 'play', labelKey: 'nav.play', icon: Gamepad2, path: '/play' },
+  { id: 'leaderboard', labelKey: 'nav.ranking', icon: Trophy, path: '/leaderboard' },
+  { id: 'chatbot', labelKey: 'nav.chatbot', icon: MessageCircle, path: '/chatbot' },
+  { id: 'profile', labelKey: 'nav.profile', icon: User, path: '/profile-tab' },
 ];
 
 export default function BottomNavbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const getActiveTab = (): string => {
     const path = location.pathname;
@@ -40,13 +42,14 @@ export default function BottomNavbar() {
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
+          const label = t(tab.labelKey);
 
           return (
             <button
               key={tab.id}
               onClick={() => navigate(tab.path)}
               className={`navbar-tab ${isActive ? 'navbar-tab-active' : 'navbar-tab-inactive'}`}
-              aria-label={tab.label}
+              aria-label={label}
               aria-current={isActive ? 'page' : undefined}
             >
               <div className={`navbar-icon-wrap ${isActive ? 'navbar-icon-active' : ''}`}>
@@ -58,7 +61,7 @@ export default function BottomNavbar() {
               </div>
               <span className={`navbar-label ${isActive ? 'text-game-primary font-bold' : 'text-gray-400 font-medium'
                 }`}>
-                {tab.label}
+                {label}
               </span>
             </button>
           );

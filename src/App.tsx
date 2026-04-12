@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { GameProvider } from "@/state/GameContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import AppShell from "@/components/layout/AppShell";
 
 // Screens — Onboarding (no navbar)
@@ -68,8 +69,9 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <GameProvider>
-        <BrowserRouter>
+      <LanguageProvider>
+        <GameProvider>
+          <BrowserRouter>
           <Routes>
             {/* === Onboarding (no navbar) === */}
             <Route path="/" element={<WithFrame><Welcome /></WithFrame>} />
@@ -117,8 +119,9 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </GameProvider>
+          </BrowserRouter>
+        </GameProvider>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
