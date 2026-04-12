@@ -1,194 +1,397 @@
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/state/GameContext';
-import { ALL_WORDS, WORD_CATEGORIES, getWordOfTheDay, getCategoryCounts } from '@/data/wordData';
-import { Volume2, ChevronRight, BookOpen, Sparkles } from 'lucide-react';
-import { useRef, useState, useMemo } from 'react';
+import { ALL_WORDS, WORD_CATEGORIES, getCategoryCounts } from '@/data/wordData';
+import { Volume2, ChevronRight, BookOpen, Sparkles, Check, X } from 'lucide-react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { getEmojiImageUrl } from '@/lib/emojiImages';
+import NudgeBar from '@/components/NudgeBar';
+import type { WordItem } from '@/data/wordData';
+
+/* ─────────────────────────────────────────────
+   HELPERS
+   ───────────────────────────────────────────── */
+
+function getGreeting(name: string) {
+  const h = new Date().getHours();
+  if (h < 12) return { text: `Good morning, ${name}`, emoji: '☀️', sub: 'Ready to learn something new today?' };
+  if (h < 17) return { text: `Good afternoon, ${name}`, emoji: '🌤️', sub: 'Let\'s pick up where you left off!' };
+  return { text: `Good evening, ${name}`, emoji: '🌙', sub: 'A perfect time for a quick session.' };
+}
+
+function getDailyWords(learnedIds: string[], count = 5): WordItem[] {
+  const dayOffset = Math.floor(Date.now() / 86400000);
+  // prioritize unlearned words, then cycle
+  const unlearned = ALL_WORDS.filter(w => !learnedIds.includes(w.id));
+  const pool = unlearned.length > 0 ? unlearned : ALL_WORDS;
+  const start = dayOffset % pool.length;
+  const result: WordItem[] = [];
+  for (let i = 0; i < Math.min(count, pool.length); i++) {
+    result.push(pool[(start + i) % pool.length]);
+  }
+  return result;
+}
+
+/* ─────────────────────────────────────────────
+   SUB-COMPONENTS
+   ───────────────────────────────────────────── */
+
+/** TASK 1 — Personalized Header */
+function PersonalizedHeader({
+  name, totalCoins, totalDiamonds, learnedCount, totalWords,
+}: {
+  name: string; totalCoins: number; totalDiamonds: number; learnedCount: number; totalWords: number;
+}) {
+  const greeting = getGreeting(name);
+  const progress = Math.round((learnedCount / totalWords) * 100);
+
+  return (
+    <div className="learn-header-bg text-white px-5 pt-6 pb-10">
+      <div className="max-w-lg mx-auto">
+        {/* Top row: greeting + currency */}
+        <div className="flex items-start justify-between mb-5">
+          <div className="learn-greeting-animate">
+            <p className="text-sm opacity-70 mb-0.5">{greeting.sub}</p>
+            <h1 className="text-[22px] font-bold leading-tight tracking-tight">
+              {greeting.text} <span className="inline-block animate-wave">{greeting.emoji}</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <CurrencyBadge type="coin" value={totalCoins} />
+            <CurrencyBadge type="gem" value={totalDiamonds} />
+          </div>
+        </div>
+
+        {/* Progress pill */}
+        <div className="learn-progress-pill">
+          <div className="flex items-center justify-between text-[11px] mb-1.5 font-medium">
+            <span className="opacity-90">Words mastered</span>
+            <span className="font-bold">{learnedCount} / {totalWords}</span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-white/20 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-white transition-all duration-700 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** TASK 4 — Premium Currency Badge */
+function CurrencyBadge({ type, value }: { type: 'coin' | 'gem'; value: number }) {
+  const [animate, setAnimate] = useState(false);
+  const prevValue = useRef(value);
+
+  useEffect(() => {
+    if (value !== prevValue.current) {
+      setAnimate(true);
+      prevValue.current = value;
+      const t = setTimeout(() => setAnimate(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
+
+  return (
+    <div className={`currency-badge ${animate ? 'currency-bounce' : ''}`}>
+      <div className={`currency-icon ${type === 'coin' ? 'currency-icon-coin' : 'currency-icon-gem'}`}>
+        {type === 'coin' ? '◉' : '◆'}
+      </div>
+      <span className="text-sm font-bold tracking-tight">{value}</span>
+    </div>
+  );
+}
+
+/** TASK 3 — Swipeable Word Cards (Bumble-style) */
+function SwipeableWords({
+  words, learnedWords, onMarkLearned,
+}: {
+  words: WordItem[]; learnedWords: string[]; onMarkLearned: (id: string) => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [feedbackEmoji, setFeedbackEmoji] = useState<string | null>(null);
+
+  const currentWord = words[currentIndex];
+  const nextWord = words[currentIndex + 1];
+  const isLearned = currentWord ? learnedWords.includes(currentWord.id) : false;
+
+  const playAudio = (url: string, type: string) => {
+    if (audioRef.current) audioRef.current.pause();
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    setPlayingAudio(type);
+    audio.play().catch(() => {});
+    audio.onended = () => setPlayingAudio(null);
+  };
+
+  const handleSwipe = useCallback((direction: 'left' | 'right') => {
+    setSwipeDirection(direction);
+    if (direction === 'right' && currentWord && !learnedWords.includes(currentWord.id)) {
+      onMarkLearned(currentWord.id);
+      setFeedbackEmoji('+5 ◉');
+    }
+    setTimeout(() => {
+      setCurrentIndex(i => Math.min(i + 1, words.length));
+      setSwipeDirection(null);
+      setDragX(0);
+      setFeedbackEmoji(null);
+    }, 300);
+  }, [currentWord, learnedWords, onMarkLearned, words.length]);
+
+  const onDragStart = (clientX: number) => {
+    setIsDragging(true);
+    startX.current = clientX;
+  };
+
+  const onDragMove = (clientX: number) => {
+    if (!isDragging) return;
+    setDragX(clientX - startX.current);
+  };
+
+  const onDragEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (Math.abs(dragX) > 80) {
+      handleSwipe(dragX > 0 ? 'right' : 'left');
+    } else {
+      setDragX(0);
+    }
+  };
+
+  if (currentIndex >= words.length) {
+    return (
+      <div className="swipe-done-card text-center py-8">
+        <div className="text-4xl mb-2">🎉</div>
+        <p className="font-semibold text-foreground">All caught up!</p>
+        <p className="text-xs text-muted-foreground mt-1">Come back tomorrow for new words.</p>
+      </div>
+    );
+  }
+
+  const rotation = dragX * 0.08;
+  const leftOpacity = dragX < -30 ? Math.min(Math.abs(dragX) / 100, 1) : 0;
+  const rightOpacity = dragX > 30 ? Math.min(dragX / 100, 1) : 0;
+
+  return (
+    <div className="relative w-full" style={{ height: 280 }}>
+      {/* Next card (peeking) */}
+      {nextWord && (
+        <div className="swipe-card-peek absolute inset-0">
+          <div className="swipe-card-inner p-4 flex items-center gap-4 opacity-50 scale-[0.96]">
+            <img
+              src={nextWord.imageUrl}
+              alt={nextWord.english}
+              className="w-16 h-16 rounded-xl object-cover bg-slate-100"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = getEmojiImageUrl(nextWord.english, nextWord.category);
+              }}
+            />
+            <div>
+              <h3 className="text-lg font-bold text-foreground/50">{nextWord.english}</h3>
+              <p className="text-xs text-muted-foreground/50">{nextWord.category}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Current card */}
+      <div
+        className={`swipe-card absolute inset-0 ${swipeDirection === 'left' ? 'swipe-exit-left' : ''} ${swipeDirection === 'right' ? 'swipe-exit-right' : ''}`}
+        style={{
+          transform: swipeDirection ? undefined : `translateX(${dragX}px) rotate(${rotation}deg)`,
+          transition: isDragging ? 'none' : 'transform 0.25s ease',
+        }}
+        onMouseDown={(e) => onDragStart(e.clientX)}
+        onMouseMove={(e) => onDragMove(e.clientX)}
+        onMouseUp={onDragEnd}
+        onMouseLeave={onDragEnd}
+        onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
+        onTouchMove={(e) => onDragMove(e.touches[0].clientX)}
+        onTouchEnd={onDragEnd}
+      >
+        {/* Swipe indicators */}
+        <div className="absolute top-4 left-4 z-10 pointer-events-none" style={{ opacity: leftOpacity }}>
+          <div className="bg-rose-500 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+            <X className="w-3 h-3" /> Skip
+          </div>
+        </div>
+        <div className="absolute top-4 right-4 z-10 pointer-events-none" style={{ opacity: rightOpacity }}>
+          <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
+            <Check className="w-3 h-3" /> Learned
+          </div>
+        </div>
+
+        {/* Coin feedback */}
+        {feedbackEmoji && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <div className="coin-feedback font-bold text-emerald-500 text-xl">{feedbackEmoji}</div>
+          </div>
+        )}
+
+        <div className="swipe-card-inner p-6 h-full flex flex-col cursor-grab active:cursor-grabbing touch-none select-none">
+          {/* Top: category + learned badge */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+              {currentWord.category}
+            </span>
+            {isLearned && (
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1">
+                <Check className="w-3 h-3" /> Learned
+              </span>
+            )}
+          </div>
+
+          {/* Body: image + word + audio */}
+          <div className="flex-1 flex items-center gap-5">
+            <img
+              src={currentWord.imageUrl}
+              alt={currentWord.english}
+              className="w-24 h-24 rounded-2xl object-cover bg-slate-100 shadow-md pointer-events-none"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = getEmojiImageUrl(currentWord.english, currentWord.category);
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <h3 className="text-2xl font-black text-foreground leading-tight">{currentWord.english}</h3>
+              <div className="flex gap-2.5 mt-3">
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); playAudio(currentWord.audioEnglishUrl, 'eng'); }}
+                  className={`audio-btn ${playingAudio === 'eng' ? 'audio-btn-active-blue' : 'audio-btn-blue'}`}
+                >
+                  <Volume2 className="w-4 h-4" />
+                  English
+                </button>
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); playAudio(currentWord.audioTotoUrl, 'toto'); }}
+                  className={`audio-btn ${playingAudio === 'toto' ? 'audio-btn-active-green' : 'audio-btn-green'}`}
+                >
+                  <Volume2 className="w-4 h-4" />
+                  Toto
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom hint */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
+            <span className="text-xs text-slate-400 flex items-center gap-1.5">
+              <X className="w-3.5 h-3.5" /> Swipe left to skip
+            </span>
+            <span className="text-xs text-emerald-600 font-medium flex items-center gap-1.5">
+              Swipe right to learn <Check className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card counter */}
+      <div className="absolute -bottom-7 left-0 right-0 flex justify-center gap-1">
+        {words.map((_, i) => (
+          <div
+            key={i}
+            className={`h-1 rounded-full transition-all duration-300 ${
+              i === currentIndex ? 'w-5 bg-emerald-500' : i < currentIndex ? 'w-1.5 bg-emerald-400' : 'w-1.5 bg-slate-300'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MAIN COMPONENT
+   ───────────────────────────────────────────── */
 
 export default function LearnTab() {
   const navigate = useNavigate();
   const game = useGame();
   const total = game.getTotalProgress();
-  const wordOfTheDay = getWordOfTheDay();
   const categoryCounts = getCategoryCounts();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
 
   const learnedCount = game.learnedWords.length;
   const totalWords = ALL_WORDS.length;
-  const learnProgress = Math.round((learnedCount / totalWords) * 100);
 
-  // Personalized nudge
-  const nudge = useMemo(() => {
-    if (learnedCount === 0) return { text: "Start your Toto journey! Learn your first word 🌟", action: "Learn First Word", emoji: "🚀" };
-    if (learnedCount < 5) return { text: `Great start! ${5 - learnedCount} more words to unlock a game 🎮`, action: "Keep Learning", emoji: "💪" };
-    if (learnedCount < 15) return { text: `You know ${learnedCount} words! Try a quiz to earn coins 🪙`, action: "Take Quiz", emoji: "🧠" };
-    if (learnedCount < 30) return { text: `Amazing! ${learnedCount}/${totalWords} words! You're becoming fluent 🌟`, action: "Learn More", emoji: "⭐" };
-    return { text: `Master learner! ${learnedCount}/${totalWords} words! Almost there 🎉`, action: "Complete All", emoji: "🏆" };
-  }, [learnedCount, totalWords]);
-
-  const playAudio = (url: string, type: string) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    setPlayingAudio(type);
-    audio.play().catch(() => { });
-    audio.onended = () => setPlayingAudio(null);
-  };
+  const dailyWords = useMemo(() => getDailyWords(game.learnedWords, 5), [game.learnedWords]);
 
   return (
-    <div className="min-h-screen screen-enter pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-game-primary to-emerald-600 text-white px-4 pt-5 pb-8">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-2xl font-bold">Learn</h1>
-              <p className="text-sm opacity-80">Your Toto word library</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 rounded-full px-3 py-1.5">
-                <span className="text-sm font-bold">🪙 {total.totalCoins}</span>
-              </div>
-              <div className="bg-white/20 rounded-full px-3 py-1.5">
-                <span className="text-sm font-bold">💎 {total.totalDiamonds}</span>
-              </div>
-            </div>
-          </div>
+    <div className="learn-page-bg min-h-screen pb-24">
+      {/* TASK 1: Personalized Header */}
+      <PersonalizedHeader
+        name={game.playerName || 'Learner'}
+        totalCoins={total.totalCoins}
+        totalDiamonds={total.totalDiamonds}
+        learnedCount={learnedCount}
+        totalWords={totalWords}
+      />
 
-          {/* Learning progress bar */}
-          <div className="bg-white/15 backdrop-blur rounded-xl p-3">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-semibold">Words Learned</span>
-              <span className="opacity-80">{learnedCount}/{totalWords}</span>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-2">
-              <div
-                className="bg-white rounded-full h-2 transition-all"
-                style={{ width: `${learnProgress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-lg mx-auto px-4 -mt-5 space-y-5">
+        {/* Smart Nudge Bar */}
+        <NudgeBar rotateInterval={6000} />
 
-      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-4">
-        {/* Personalized Nudge */}
-        <div className="card-game p-4 border-l-4 border-game-primary animate-fade-in">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">{nudge.emoji}</span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">{nudge.text}</p>
-              <button
-                onClick={() => navigate(learnedCount < 5 ? '/learn/category/Animals' : '/games')}
-                className="text-xs font-bold text-game-primary mt-1 hover:underline"
-              >
-                {nudge.action} →
-              </button>
-            </div>
+        {/* TASK 3: Swipeable Word Cards */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <h2 className="font-bold text-sm uppercase tracking-wider text-slate-600">Today's Words</h2>
           </div>
-        </div>
-
-        {/* Word of the Day */}
-        <div className="card-game overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 border-b border-amber-100">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Word of the Day</span>
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="flex items-center gap-4">
-              <img
-                src={wordOfTheDay.imageUrl}
-                alt={wordOfTheDay.english}
-                className="w-20 h-20 rounded-xl object-cover bg-gray-50"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = getEmojiImageUrl(wordOfTheDay.english, wordOfTheDay.category);
-                }}
-              />
-              <div className="flex-1">
-                <h3 className="text-2xl font-black text-foreground">{wordOfTheDay.english}</h3>
-                <p className="text-xs text-muted-foreground mb-2">{wordOfTheDay.category}</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => playAudio(wordOfTheDay.audioEnglishUrl, 'eng')}
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all
-                      ${playingAudio === 'eng'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
-                  >
-                    <Volume2 className="w-3.5 h-3.5" />
-                    English
-                  </button>
-                  <button
-                    onClick={() => playAudio(wordOfTheDay.audioTotoUrl, 'toto')}
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all
-                      ${playingAudio === 'toto'
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
-                  >
-                    <Volume2 className="w-3.5 h-3.5" />
-                    Toto
-                  </button>
-                </div>
-              </div>
-            </div>
-            {!game.learnedWords.includes(wordOfTheDay.id) && (
-              <button
-                onClick={() => {
-                  game.markWordLearned(wordOfTheDay.id);
-                }}
-                className="w-full mt-3 py-2.5 rounded-xl bg-game-primary text-white text-sm font-bold
-                         active:scale-[0.98] transition-transform"
-              >
-                Mark as Learned (+5 🪙)
-              </button>
-            )}
-            {game.learnedWords.includes(wordOfTheDay.id) && (
-              <div className="w-full mt-3 py-2.5 rounded-xl bg-green-50 text-green-600 text-sm font-bold text-center">
-                ✅ Already Learned!
-              </div>
-            )}
-          </div>
+          <SwipeableWords
+            words={dailyWords}
+            learnedWords={game.learnedWords}
+            onMarkLearned={game.markWordLearned}
+          />
         </div>
 
         {/* Categories */}
-        <div>
+        <div className="mt-10">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Browse by Category</h2>
-            <span className="text-xs text-muted-foreground">{totalWords} words</span>
+            <h2 className="font-bold text-base text-slate-800">Browse by Category</h2>
+            <span className="text-[11px] text-slate-500 font-semibold">{totalWords} words</span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {WORD_CATEGORIES.map((cat) => {
               const count = categoryCounts[cat.id] || 0;
               const learnedInCat = ALL_WORDS.filter(
                 w => w.category === cat.id && game.learnedWords.includes(w.id)
               ).length;
+              const catProgress = count > 0 ? Math.round((learnedInCat / count) * 100) : 0;
               return (
                 <button
                   key={cat.id}
                   onClick={() => navigate(`/learn/category/${encodeURIComponent(cat.id)}`)}
-                  className="card-game p-3 text-center active:scale-[0.96] transition-transform"
+                  className="category-card text-center"
                 >
-                  <div className="text-2xl mb-1">{cat.emoji}</div>
-                  <p className="text-xs font-bold truncate">{cat.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{learnedInCat}/{count}</p>
+                  <div className="text-3xl mb-2">{cat.emoji}</div>
+                  <p className="text-sm font-semibold truncate text-foreground">{cat.label}</p>
+                  <div className="w-full h-1.5 rounded-full bg-slate-200 mt-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${cat.color} transition-all duration-500`}
+                      style={{ width: `${catProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 font-medium">{learnedInCat}/{count}</p>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Concepts Section */}
+        {/* Concepts */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Concepts</h2>
+            <h2 className="font-bold text-base text-slate-800">Concepts</h2>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {[
               { id: '770e8400-e29b-41d4-a716-446655440001', title: 'Evaporation', emoji: '💧', slides: 3 },
               { id: '770e8400-e29b-41d4-a716-446655440002', title: 'Plant Growth', emoji: '🌱', slides: 3 },
@@ -203,17 +406,17 @@ export default function LearnTab() {
                 <button
                   key={concept.id}
                   onClick={() => navigate(`/learn/concept/${concept.id}`)}
-                  className="w-full card-game p-3 flex items-center gap-3 active:scale-[0.98] transition-transform text-left"
+                  className="concept-row w-full"
                 >
-                  <span className="text-2xl">{concept.emoji}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{concept.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{concept.slides} slides</p>
+                  <div className="concept-row-icon">{concept.emoji}</div>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-[15px] text-foreground">{concept.title}</p>
+                    <p className="text-xs text-muted-foreground">{concept.slides} slides</p>
                   </div>
                   {isCompleted ? (
-                    <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">Done ✅</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Done ✅</span>
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <ChevronRight className="w-5 h-5 text-slate-400" />
                   )}
                 </button>
               );
@@ -221,13 +424,13 @@ export default function LearnTab() {
           </div>
         </div>
 
-        {/* Stories Section */}
+        {/* Stories */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Folk Stories</h2>
+            <h2 className="font-bold text-base text-slate-800">Folk Stories</h2>
             <BookOpen className="w-4 h-4 text-muted-foreground" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {[
               { id: '550e8400-e29b-41d4-a716-446655440001', title: 'The Brave Toto Boy', emoji: '🐯', desc: 'A story of courage and unity' },
               { id: '550e8400-e29b-41d4-a716-446655440002', title: 'The River and the Drum', emoji: '🥁', desc: 'Nature listens to our actions' },
@@ -237,17 +440,17 @@ export default function LearnTab() {
                 <button
                   key={story.id}
                   onClick={() => navigate(`/learn/story/${story.id}`)}
-                  className="w-full card-game p-4 flex items-center gap-3 active:scale-[0.98] transition-transform text-left"
+                  className="concept-row w-full"
                 >
                   <span className="text-3xl">{story.emoji}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{story.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{story.desc}</p>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-[15px] text-foreground">{story.title}</p>
+                    <p className="text-xs text-muted-foreground">{story.desc}</p>
                   </div>
                   {isCompleted ? (
-                    <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">Read ✅</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Read ✅</span>
                   ) : (
-                    <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-bold">New</span>
+                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-bold">New</span>
                   )}
                 </button>
               );
@@ -255,13 +458,13 @@ export default function LearnTab() {
           </div>
         </div>
 
-        {/* Daily tip */}
-        <div className="card-game p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100 mb-4">
+        {/* Daily tip — refined */}
+        <div className="learn-tip-card mb-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl">🦉</span>
             <div>
-              <p className="text-sm font-bold text-purple-700">Toto Tip</p>
-              <p className="text-xs text-purple-600 mt-0.5">
+              <p className="text-sm font-bold text-violet-700">Toto Tip</p>
+              <p className="text-[13px] text-violet-600/80 mt-0.5 leading-relaxed">
                 Learn 5 new words to unlock games! Words you learn here will appear in quizzes and earn you coins.
               </p>
             </div>

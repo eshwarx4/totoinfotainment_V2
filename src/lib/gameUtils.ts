@@ -1,4 +1,4 @@
-import { WordItem } from '@/types/content';
+// Game utility functions
 
 export function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
@@ -27,11 +27,11 @@ export function calculateGameScore(
   return { score, percentage, isPerfect: correct === total };
 }
 
-export function generateOptions(
-  correctWord: WordItem,
-  allWords: WordItem[],
+export function generateOptions<T extends { id: string }>(
+  correctWord: T,
+  allWords: T[],
   optionCount: number = 4
-): WordItem[] {
+): T[] {
   const others = allWords.filter((w) => w.id !== correctWord.id);
   const wrongOptions = pickRandom(others, optionCount - 1);
   return shuffle([correctWord, ...wrongOptions]);

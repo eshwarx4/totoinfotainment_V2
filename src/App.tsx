@@ -39,7 +39,7 @@ import CulturalReward from "./screens/CulturalReward";
 import PuzzleGame from "./components/play/puzzle/PuzzleGame";
 import RunnerGame from "./components/play/runner/RunnerGame";
 import TreasureHunt from "./components/play/treasure/TreasureHunt";
-import BlockBuilder from "./components/play/block/BlockBuilder";
+import BlockBuilder from "./components/play/blocks/BlockBuilder";
 import WordFinder from "./components/play/wordfinder/WordFinder";
 import QuickChallenge from "./components/play/challenge/QuickChallenge";
 
