@@ -5,17 +5,19 @@ import { Volume2, ChevronRight, BookOpen, Sparkles, Check, X } from 'lucide-reac
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { getEmojiImageUrl } from '@/lib/emojiImages';
 import NudgeBar from '@/components/NudgeBar';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import type { WordItem } from '@/data/wordData';
 
 /* ─────────────────────────────────────────────
    HELPERS
    ───────────────────────────────────────────── */
 
-function getGreeting(name: string) {
+function getGreeting(name: string, t: (key: string) => string) {
   const h = new Date().getHours();
-  if (h < 12) return { text: `Good morning, ${name}`, emoji: '☀️', sub: 'Ready to learn something new today?' };
-  if (h < 17) return { text: `Good afternoon, ${name}`, emoji: '🌤️', sub: 'Let\'s pick up where you left off!' };
-  return { text: `Good evening, ${name}`, emoji: '🌙', sub: 'A perfect time for a quick session.' };
+  if (h < 12) return { text: `${t('learn.greeting.morning')}, ${name}`, emoji: '☀️', sub: t('learn.greeting.sub.morning') };
+  if (h < 17) return { text: `${t('learn.greeting.afternoon')}, ${name}`, emoji: '🌤️', sub: t('learn.greeting.sub.afternoon') };
+  return { text: `${t('learn.greeting.evening')}, ${name}`, emoji: '🌙', sub: t('learn.greeting.sub.evening') };
 }
 
 function getDailyWords(learnedIds: string[], count = 5): WordItem[] {
@@ -37,11 +39,11 @@ function getDailyWords(learnedIds: string[], count = 5): WordItem[] {
 
 /** TASK 1 — Personalized Header */
 function PersonalizedHeader({
-  name, totalCoins, totalDiamonds, learnedCount, totalWords,
+  name, totalCoins, totalDiamonds, learnedCount, totalWords, t,
 }: {
-  name: string; totalCoins: number; totalDiamonds: number; learnedCount: number; totalWords: number;
+  name: string; totalCoins: number; totalDiamonds: number; learnedCount: number; totalWords: number; t: (key: string) => string;
 }) {
-  const greeting = getGreeting(name);
+  const greeting = getGreeting(name, t);
   const progress = Math.round((learnedCount / totalWords) * 100);
 
   return (
@@ -56,15 +58,15 @@ function PersonalizedHeader({
             </h1>
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <CurrencyBadge type="coin" value={totalCoins} />
-            <CurrencyBadge type="gem" value={totalDiamonds} />
+            <CurrencyDisplay type="coin" value={totalCoins} />
+            <CurrencyDisplay type="diamond" value={totalDiamonds} />
           </div>
         </div>
 
         {/* Progress pill */}
         <div className="learn-progress-pill">
           <div className="flex items-center justify-between text-[11px] mb-1.5 font-medium">
-            <span className="opacity-90">Words mastered</span>
+            <span className="opacity-90">{t('learn.wordsMastered')}</span>
             <span className="font-bold">{learnedCount} / {totalWords}</span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-white/20 overflow-hidden">
@@ -79,35 +81,13 @@ function PersonalizedHeader({
   );
 }
 
-/** TASK 4 — Premium Currency Badge */
-function CurrencyBadge({ type, value }: { type: 'coin' | 'gem'; value: number }) {
-  const [animate, setAnimate] = useState(false);
-  const prevValue = useRef(value);
 
-  useEffect(() => {
-    if (value !== prevValue.current) {
-      setAnimate(true);
-      prevValue.current = value;
-      const t = setTimeout(() => setAnimate(false), 600);
-      return () => clearTimeout(t);
-    }
-  }, [value]);
-
-  return (
-    <div className={`currency-badge ${animate ? 'currency-bounce' : ''}`}>
-      <div className={`currency-icon ${type === 'coin' ? 'currency-icon-coin' : 'currency-icon-gem'}`}>
-        {type === 'coin' ? '◉' : '◆'}
-      </div>
-      <span className="text-sm font-bold tracking-tight">{value}</span>
-    </div>
-  );
-}
 
 /** TASK 3 — Swipeable Word Cards (Bumble-style) */
 function SwipeableWords({
-  words, learnedWords, onMarkLearned,
+  words, learnedWords, onMarkLearned, t,
 }: {
-  words: WordItem[]; learnedWords: string[]; onMarkLearned: (id: string) => void;
+  words: WordItem[]; learnedWords: string[]; onMarkLearned: (id: string) => void; t: (key: string) => string;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
@@ -127,7 +107,7 @@ function SwipeableWords({
     const audio = new Audio(url);
     audioRef.current = audio;
     setPlayingAudio(type);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
     audio.onended = () => setPlayingAudio(null);
   };
 
@@ -169,8 +149,8 @@ function SwipeableWords({
     return (
       <div className="swipe-done-card text-center py-8">
         <div className="text-4xl mb-2">🎉</div>
-        <p className="font-semibold text-foreground">All caught up!</p>
-        <p className="text-xs text-muted-foreground mt-1">Come back tomorrow for new words.</p>
+        <p className="font-semibold text-foreground">{t('learn.allCaughtUp')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('learn.comeBackTomorrow')}</p>
       </div>
     );
   }
@@ -195,7 +175,7 @@ function SwipeableWords({
             />
             <div>
               <h3 className="text-lg font-bold text-foreground/50">{nextWord.english}</h3>
-              <p className="text-xs text-muted-foreground/50">{nextWord.category}</p>
+              <p className="text-xs text-muted-foreground/50">{t(`category.${nextWord.category}`)}</p>
             </div>
           </div>
         </div>
@@ -219,12 +199,12 @@ function SwipeableWords({
         {/* Swipe indicators */}
         <div className="absolute top-4 left-4 z-10 pointer-events-none" style={{ opacity: leftOpacity }}>
           <div className="bg-rose-500 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-            <X className="w-3 h-3" /> Skip
+            <X className="w-3 h-3" /> {t('learn.skip')}
           </div>
         </div>
         <div className="absolute top-4 right-4 z-10 pointer-events-none" style={{ opacity: rightOpacity }}>
           <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-            <Check className="w-3 h-3" /> Learned
+            <Check className="w-3 h-3" /> {t('learn.learned')}
           </div>
         </div>
 
@@ -239,11 +219,11 @@ function SwipeableWords({
           {/* Top: category + learned badge */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-              {currentWord.category}
+              {t(`category.${currentWord.category}`)}
             </span>
             {isLearned && (
               <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1">
-                <Check className="w-3 h-3" /> Learned
+                <Check className="w-3 h-3" /> {t('learn.learned')}
               </span>
             )}
           </div>
@@ -267,7 +247,7 @@ function SwipeableWords({
                   className={`audio-btn ${playingAudio === 'eng' ? 'audio-btn-active-blue' : 'audio-btn-blue'}`}
                 >
                   <Volume2 className="w-4 h-4" />
-                  English
+                  {t('common.english')}
                 </button>
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
@@ -275,7 +255,7 @@ function SwipeableWords({
                   className={`audio-btn ${playingAudio === 'toto' ? 'audio-btn-active-green' : 'audio-btn-green'}`}
                 >
                   <Volume2 className="w-4 h-4" />
-                  Toto
+                  {t('common.toto')}
                 </button>
               </div>
             </div>
@@ -284,10 +264,10 @@ function SwipeableWords({
           {/* Bottom hint */}
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
             <span className="text-xs text-slate-400 flex items-center gap-1.5">
-              <X className="w-3.5 h-3.5" /> Swipe left to skip
+              <X className="w-3.5 h-3.5" /> {t('learn.swipeLeftSkip')}
             </span>
             <span className="text-xs text-emerald-600 font-medium flex items-center gap-1.5">
-              Swipe right to learn <Check className="w-3.5 h-3.5" />
+              {t('learn.swipeRightLearn')} <Check className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
@@ -298,9 +278,8 @@ function SwipeableWords({
         {words.map((_, i) => (
           <div
             key={i}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === currentIndex ? 'w-5 bg-emerald-500' : i < currentIndex ? 'w-1.5 bg-emerald-400' : 'w-1.5 bg-slate-300'
-            }`}
+            className={`h-1 rounded-full transition-all duration-300 ${i === currentIndex ? 'w-5 bg-emerald-500' : i < currentIndex ? 'w-1.5 bg-emerald-400' : 'w-1.5 bg-slate-300'
+              }`}
           />
         ))}
       </div>
@@ -315,6 +294,7 @@ function SwipeableWords({
 export default function LearnTab() {
   const navigate = useNavigate();
   const game = useGame();
+  const { t } = useLanguage();
   const total = game.getTotalProgress();
   const categoryCounts = getCategoryCounts();
 
@@ -332,6 +312,7 @@ export default function LearnTab() {
         totalDiamonds={total.totalDiamonds}
         learnedCount={learnedCount}
         totalWords={totalWords}
+        t={t}
       />
 
       <div className="max-w-lg mx-auto px-4 -mt-5 space-y-5">
@@ -342,20 +323,21 @@ export default function LearnTab() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-amber-500" />
-            <h2 className="font-bold text-sm uppercase tracking-wider text-slate-600">Today's Words</h2>
+            <h2 className="font-bold text-sm uppercase tracking-wider text-slate-600">{t('learn.todaysWords')}</h2>
           </div>
           <SwipeableWords
             words={dailyWords}
             learnedWords={game.learnedWords}
             onMarkLearned={game.markWordLearned}
+            t={t}
           />
         </div>
 
         {/* Categories */}
         <div className="mt-10">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base text-slate-800">Browse by Category</h2>
-            <span className="text-[11px] text-slate-500 font-semibold">{totalWords} words</span>
+            <h2 className="font-bold text-base text-slate-800">{t('learn.browseByCategory')}</h2>
+            <span className="text-[11px] text-slate-500 font-semibold">{totalWords} {t('learn.words')}</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {WORD_CATEGORIES.map((cat) => {
@@ -371,7 +353,7 @@ export default function LearnTab() {
                   className="category-card text-center"
                 >
                   <div className="text-3xl mb-2">{cat.emoji}</div>
-                  <p className="text-sm font-semibold truncate text-foreground">{cat.label}</p>
+                  <p className="text-sm font-semibold truncate text-foreground">{t(`category.${cat.id}`)}</p>
                   <div className="w-full h-1.5 rounded-full bg-slate-200 mt-2 overflow-hidden">
                     <div
                       className={`h-full rounded-full bg-gradient-to-r ${cat.color} transition-all duration-500`}
@@ -388,7 +370,7 @@ export default function LearnTab() {
         {/* Concepts */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base text-slate-800">Concepts</h2>
+            <h2 className="font-bold text-base text-slate-800">{t('learn.concepts')}</h2>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="space-y-2.5">
@@ -411,10 +393,10 @@ export default function LearnTab() {
                   <div className="concept-row-icon">{concept.emoji}</div>
                   <div className="flex-1 text-left">
                     <p className="font-semibold text-[15px] text-foreground">{concept.title}</p>
-                    <p className="text-xs text-muted-foreground">{concept.slides} slides</p>
+                    <p className="text-xs text-muted-foreground">{concept.slides} {t('learn.slides')}</p>
                   </div>
                   {isCompleted ? (
-                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Done ✅</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">{t('learn.done')} ✅</span>
                   ) : (
                     <ChevronRight className="w-5 h-5 text-slate-400" />
                   )}
@@ -427,7 +409,7 @@ export default function LearnTab() {
         {/* Stories */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base text-slate-800">Folk Stories</h2>
+            <h2 className="font-bold text-base text-slate-800">{t('learn.folkStories')}</h2>
             <BookOpen className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="space-y-2.5">
@@ -448,9 +430,9 @@ export default function LearnTab() {
                     <p className="text-xs text-muted-foreground">{story.desc}</p>
                   </div>
                   {isCompleted ? (
-                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Read ✅</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">{t('learn.read')} ✅</span>
                   ) : (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-bold">New</span>
+                    <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-bold">{t('learn.new')}</span>
                   )}
                 </button>
               );
@@ -463,9 +445,9 @@ export default function LearnTab() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">🦉</span>
             <div>
-              <p className="text-sm font-bold text-violet-700">Toto Tip</p>
+              <p className="text-sm font-bold text-violet-700">{t('learn.totoTip')}</p>
               <p className="text-[13px] text-violet-600/80 mt-0.5 leading-relaxed">
-                Learn 5 new words to unlock games! Words you learn here will appear in quizzes and earn you coins.
+                {t('learn.tipText')}
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useGame } from '@/state/GameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Trophy, Medal, Crown } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -13,6 +14,7 @@ interface UserRankData {
 
 export default function LeaderboardTab() {
     const game = useGame();
+    const { t } = useLanguage();
 
     // Build leaderboard from all users
     const rankings = useMemo((): UserRankData[] => {
@@ -51,11 +53,11 @@ export default function LeaderboardTab() {
             <div className="bg-gradient-to-br from-amber-400 to-orange-500 text-white px-4 pt-5 pb-8">
                 <div className="max-w-lg mx-auto text-center">
                     <Trophy className="w-12 h-12 mx-auto mb-2 text-white" />
-                    <h1 className="text-2xl font-bold">Leaderboard</h1>
-                    <p className="text-sm opacity-80">Who's learning the most?</p>
+                    <h1 className="text-2xl font-bold">{t('leaderboard.title')}</h1>
+                    <p className="text-sm opacity-80">{t('leaderboard.whoLearning')}</p>
                     {currentUserRank > 0 && (
                         <div className="mt-3 inline-block bg-white/20 rounded-full px-4 py-1.5">
-                            <span className="text-sm font-bold">Your Rank: #{currentUserRank}</span>
+                            <span className="text-sm font-bold">{t('leaderboard.yourRank')}: #{currentUserRank}</span>
                         </div>
                     )}
                 </div>
@@ -65,9 +67,9 @@ export default function LeaderboardTab() {
                 {rankings.length === 0 ? (
                     <div className="card-game p-8 text-center">
                         <span className="text-5xl mb-4 block">🏆</span>
-                        <h3 className="font-bold text-lg mb-2">No rankings yet!</h3>
+                        <h3 className="font-bold text-lg mb-2">{t('leaderboard.noRankings')}</h3>
                         <p className="text-sm text-muted-foreground">
-                            Create an account and start learning to appear on the leaderboard.
+                            {t('leaderboard.createAccount')}
                         </p>
                     </div>
                 ) : (
@@ -94,7 +96,7 @@ export default function LeaderboardTab() {
                                             <p className="font-bold text-sm truncate">{user.name}</p>
                                             {isMe && (
                                                 <span className="text-[10px] bg-game-primary text-white px-1.5 py-0.5 rounded-full font-bold">
-                                                    YOU
+                                                    {t('leaderboard.you')}
                                                 </span>
                                             )}
                                         </div>
@@ -105,7 +107,7 @@ export default function LeaderboardTab() {
                                     {/* Coin count (big) */}
                                     <div className="text-right flex-shrink-0">
                                         <p className="text-lg font-black text-amber-500">{user.coins}</p>
-                                        <p className="text-[10px] text-muted-foreground">coins</p>
+                                        <p className="text-[10px] text-muted-foreground">{t('leaderboard.coins')}</p>
                                     </div>
                                 </div>
                             );
@@ -115,12 +117,12 @@ export default function LeaderboardTab() {
 
                 {/* How rankings work */}
                 <div className="card-game p-4 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <h3 className="font-bold text-sm mb-2">📊 How Rankings Work</h3>
+                    <h3 className="font-bold text-sm mb-2">📊 {t('leaderboard.howItWorks')}</h3>
                     <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Learn words to earn 🪙 5 coins each</li>
-                        <li>• Complete concepts for 🪙 20 coins</li>
-                        <li>• Win games for 🪙 50+ coins</li>
-                        <li>• Perfect levels earn 💎 diamonds</li>
+                        <li>• {t('leaderboard.rule1')} 🪙</li>
+                        <li>• {t('leaderboard.rule2')} 🪙</li>
+                        <li>• {t('leaderboard.rule3')} 🪙</li>
+                        <li>• {t('leaderboard.rule4')} 💎</li>
                     </ul>
                 </div>
             </div>

@@ -5,6 +5,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/state/GameContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ALL_WORDS, WORD_CATEGORIES } from '@/data/wordData';
 import { ArrowRight } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -46,6 +47,7 @@ function generateNudges(
   completedStories: string[],
   completedConcepts: string[],
   worlds: Record<WorldId, { levels: Record<number, { completed: boolean; stars: number }> }>,
+  t: (key: string) => string,
 ): Nudge[] {
   const nudges: Nudge[] = [];
   const learnedCount = learnedWords.length;
@@ -83,9 +85,9 @@ function generateNudges(
       id: 'welcome',
       icon: '🌱',
       accentIcon: '✨',
-      title: 'Welcome! Let\'s begin your Toto journey',
-      subtitle: 'Swipe through your first words below to get started.',
-      cta: 'Start Learning',
+      title: t('nudge.welcome.title'),
+      subtitle: t('nudge.welcome.subtitle'),
+      cta: t('nudge.welcome.cta'),
       route: '/learn/category/Animals',
       theme: 'welcome',
       priority: 100,
@@ -100,9 +102,9 @@ function generateNudges(
       id: 'streak-week',
       icon: '🔥',
       accentIcon: '⚡',
-      title: `${streak}-day streak! You're unstoppable`,
-      subtitle: 'That\'s serious dedication. Keep the fire burning!',
-      cta: 'Continue',
+      title: `${streak}${t('nudge.streak.week.title')}`,
+      subtitle: t('nudge.streak.week.subtitle'),
+      cta: t('nudge.continue'),
       route: '/learn',
       theme: 'streak',
       priority: 95,
@@ -112,9 +114,9 @@ function generateNudges(
       id: 'streak-good',
       icon: '🔥',
       accentIcon: '💪',
-      title: `${streak}-day streak! Keep it alive`,
-      subtitle: 'Consistency is the secret to fluency.',
-      cta: 'Continue Learning',
+      title: `${streak}${t('nudge.streak.good.title')}`,
+      subtitle: t('nudge.streak.good.subtitle'),
+      cta: t('nudge.continueLearning'),
       route: '/learn/category/Animals',
       theme: 'streak',
       priority: 90,
@@ -124,9 +126,9 @@ function generateNudges(
       id: 'streak-start',
       icon: '🌟',
       accentIcon: '🔥',
-      title: 'Day 1 of your new streak!',
-      subtitle: 'Come back tomorrow to make it 2 days.',
-      cta: 'Learn More',
+      title: t('nudge.streak.start.title'),
+      subtitle: t('nudge.streak.start.subtitle'),
+      cta: t('nudge.learnMore'),
       route: '/learn/category/Animals',
       theme: 'streak',
       priority: 60,
@@ -142,9 +144,9 @@ function generateNudges(
       id: 'yesterday-beat',
       icon: '🚀',
       accentIcon: '📈',
-      title: `You learned ${recentWords.length} words recently. Let's beat that!`,
-      subtitle: `Aim for ${target} today and watch your progress grow.`,
-      cta: 'Let\'s Go',
+      title: t('nudge.yesterday.title').replace('{count}', String(recentWords.length)),
+      subtitle: t('nudge.yesterday.subtitle').replace('{target}', String(target)),
+      cta: t('nudge.letsGo'),
       route: '/learn',
       theme: 'progress',
       priority: 75,
@@ -156,13 +158,14 @@ function generateNudges(
   // =====================
   if (unexploredCats.length > 0) {
     const cat = unexploredCats[0];
+    const catLabel = t(`category.${cat.id}`);
     nudges.push({
       id: `explore-${cat.id}`,
       icon: cat.emoji,
       accentIcon: '🧭',
-      title: `You haven't explored ${cat.label} yet`,
-      subtitle: `Discover new words in the ${cat.label} category!`,
-      cta: 'Explore',
+      title: t('nudge.unexplored.title').replace('{category}', catLabel),
+      subtitle: t('nudge.unexplored.subtitle').replace('{category}', catLabel),
+      cta: t('nudge.explore'),
       route: `/learn/category/${encodeURIComponent(cat.id)}`,
       theme: 'explore',
       priority: learnedCount >= 2 ? 70 : 50,
@@ -170,13 +173,15 @@ function generateNudges(
     // Add a second unexplored category if available
     if (unexploredCats.length > 1) {
       const cat2 = unexploredCats[1];
+      const cat2Label = t(`category.${cat2.id}`);
+      const wordCount = ALL_WORDS.filter(w => w.category === cat2.id).length;
       nudges.push({
         id: `explore-${cat2.id}`,
         icon: cat2.emoji,
         accentIcon: '🗺️',
-        title: `${cat2.label} is waiting for you`,
-        subtitle: `${ALL_WORDS.filter(w => w.category === cat2.id).length} words to discover!`,
-        cta: 'Explore',
+        title: t('nudge.waiting.title').replace('{category}', cat2Label),
+        subtitle: t('nudge.waiting.subtitle').replace('{count}', String(wordCount)),
+        cta: t('nudge.explore'),
         route: `/learn/category/${encodeURIComponent(cat2.id)}`,
         theme: 'explore',
         priority: 35,
@@ -193,9 +198,9 @@ function generateNudges(
       id: 'revise',
       icon: '🎯',
       accentIcon: '🧠',
-      title: `Revise "${reviseWord.english}" to lock it in`,
-      subtitle: 'Spaced repetition is how your brain remembers.',
-      cta: 'Revise Now',
+      title: t('nudge.revise.title').replace('{word}', reviseWord.english),
+      subtitle: t('nudge.revise.subtitle'),
+      cta: t('nudge.reviseNow'),
       route: `/learn/category/${encodeURIComponent(reviseWord.category)}`,
       theme: 'revise',
       priority: 65,
@@ -210,9 +215,9 @@ function generateNudges(
       id: 'challenge',
       icon: '⚡',
       accentIcon: '🏆',
-      title: 'Quick 1-minute challenge?',
-      subtitle: 'Test yourself and earn bonus coins!',
-      cta: 'Start Challenge',
+      title: t('nudge.challenge.title'),
+      subtitle: t('nudge.challenge.subtitle'),
+      cta: t('nudge.startChallenge'),
       route: '/play/challenge',
       theme: 'challenge',
       priority: 55,
@@ -227,11 +232,11 @@ function generateNudges(
       id: `milestone-${learnedCount}`,
       icon: '🏅',
       accentIcon: '🎉',
-      title: `${learnedCount} words learned! Amazing milestone`,
+      title: `${learnedCount} ${t('nudge.milestone.title')}`,
       subtitle: learnedCount === 50
-        ? 'You\'re practically a Toto speaker now!'
-        : `Only ${(learnedCount === 10 ? 25 : 50) - learnedCount} more to the next milestone.`,
-      cta: 'Keep Going',
+        ? t('nudge.milestone.subtitle.50')
+        : `${(learnedCount === 10 ? 25 : 50) - learnedCount} ${t('nudge.milestone.subtitle.other')}`,
+      cta: t('nudge.keepGoing'),
       route: '/learn',
       theme: 'milestone',
       priority: 85,
@@ -247,9 +252,9 @@ function generateNudges(
       id: 'progress',
       icon: '📚',
       accentIcon: '💫',
-      title: `${pct}% vocabulary unlocked`,
-      subtitle: `${learnedCount} of ${totalWords} words — you're building real fluency!`,
-      cta: 'Learn More',
+      title: `${pct}${t('nudge.progress.title')}`,
+      subtitle: `${learnedCount} / ${totalWords}`,
+      cta: t('nudge.learnMore'),
       route: '/learn',
       theme: 'progress',
       priority: 30,
@@ -265,9 +270,9 @@ function generateNudges(
       id: 'concepts',
       icon: '💡',
       accentIcon: '📖',
-      title: `${totalConcepts - completedConcepts.length} concepts waiting for you`,
-      subtitle: 'Explore science topics in Toto and English.',
-      cta: 'Explore Concepts',
+      title: `${totalConcepts - completedConcepts.length} ${t('nudge.concepts.title')}`,
+      subtitle: t('nudge.concepts.subtitle'),
+      cta: t('nudge.concepts.cta'),
       route: '/learn',
       theme: 'explore',
       priority: 40,
@@ -282,9 +287,9 @@ function generateNudges(
       id: 'morning',
       icon: '☀️',
       accentIcon: '🌈',
-      title: 'Morning is the best time to learn!',
-      subtitle: 'Your brain is fresh — even 2 minutes will make a difference.',
-      cta: 'Quick Session',
+      title: t('nudge.morning.title'),
+      subtitle: t('nudge.morning.subtitle'),
+      cta: t('nudge.quickSession'),
       route: '/learn',
       theme: 'welcome',
       priority: 20,
@@ -294,9 +299,9 @@ function generateNudges(
       id: 'afternoon',
       icon: '🌤️',
       accentIcon: '💪',
-      title: 'Afternoon boost — learn a word!',
-      subtitle: 'A small break to grow your vocabulary.',
-      cta: 'Learn Now',
+      title: t('nudge.afternoon.title'),
+      subtitle: t('nudge.afternoon.subtitle'),
+      cta: t('nudge.learnNow'),
       route: '/learn',
       theme: 'progress',
       priority: 20,
@@ -306,9 +311,9 @@ function generateNudges(
       id: 'evening',
       icon: '🌙',
       accentIcon: '🧘',
-      title: 'Wind down with a quick word',
-      subtitle: 'A calm evening session locks in today\'s learning.',
-      cta: 'Learn Now',
+      title: t('nudge.evening.title'),
+      subtitle: t('nudge.evening.subtitle'),
+      cta: t('nudge.learnNow'),
       route: '/learn',
       theme: 'revise',
       priority: 20,
@@ -319,14 +324,14 @@ function generateNudges(
   // RULE 11: Fun facts (always present, rotates by day)
   // =====================
   const funFacts = [
-    { id: 'fact-toto', icon: '🏔️', accentIcon: '🌿', title: 'Did you know? Toto has fewer than 1,600 speakers', subtitle: 'Every word you learn helps preserve this language!', theme: 'milestone' as NudgeTheme },
-    { id: 'fact-brain', icon: '🧠', accentIcon: '⚡', title: '5 words a day trains your brain', subtitle: 'Studies show short daily sessions beat long weekly ones.', theme: 'revise' as NudgeTheme },
-    { id: 'fact-play', icon: '🎮', accentIcon: '🏆', title: 'Try the Play Zone for a fun break', subtitle: '6 mini-games to test your skills and earn coins!', theme: 'challenge' as NudgeTheme },
+    { id: 'fact-toto', icon: '🏔️', accentIcon: '🌿', title: t('nudge.fact.toto.title'), subtitle: t('nudge.fact.toto.subtitle'), theme: 'milestone' as NudgeTheme },
+    { id: 'fact-brain', icon: '🧠', accentIcon: '⚡', title: t('nudge.fact.brain.title'), subtitle: t('nudge.fact.brain.subtitle'), theme: 'revise' as NudgeTheme },
+    { id: 'fact-play', icon: '🎮', accentIcon: '🏆', title: t('nudge.fact.play.title'), subtitle: t('nudge.fact.play.subtitle'), theme: 'challenge' as NudgeTheme },
   ];
   const todayFact = funFacts[Math.floor(Date.now() / 86400000) % funFacts.length];
   nudges.push({
     ...todayFact,
-    cta: 'Learn More',
+    cta: t('nudge.learnMore'),
     route: todayFact.id === 'fact-play' ? '/play' : '/learn',
     priority: 15,
   });
@@ -418,6 +423,7 @@ interface NudgeBarProps {
 export default function NudgeBar({ rotateInterval = 6000, compact = false }: NudgeBarProps) {
   const navigate = useNavigate();
   const game = useGame();
+  const { t } = useLanguage();
   const total = game.getTotalProgress();
 
   const nudges = useMemo(() => generateNudges(
@@ -427,7 +433,8 @@ export default function NudgeBar({ rotateInterval = 6000, compact = false }: Nud
     game.completedStories,
     game.completedConcepts || [],
     game.worlds,
-  ), [game.learnedWords, game.streak, game.totalCoins, game.completedStories, game.completedConcepts, game.worlds]);
+    t,
+  ), [game.learnedWords, game.streak, game.totalCoins, game.completedStories, game.completedConcepts, game.worlds, t]);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);

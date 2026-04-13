@@ -53,10 +53,10 @@ export default function Mascot({
 
   const moodAnimation =
     mood === 'excited' ? 'animate-bounce-in' :
-    mood === 'happy' ? 'mascot-bounce' :
-    mood === 'sad' ? 'animate-shake' :
-    mood === 'thinking' ? '' :
-    'mascot-bounce';
+      mood === 'happy' ? '' :
+        mood === 'sad' ? 'animate-shake' :
+          mood === 'thinking' ? '' :
+            '';
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
@@ -70,9 +70,8 @@ export default function Mascot({
       {/* Mascot body */}
       <div className="relative inline-block">
         <span
-          className={`${SIZE_CLASSES[size]} ${moodAnimation} inline-block transition-transform duration-200 ${
-            blink ? 'opacity-80' : ''
-          }`}
+          className={`${SIZE_CLASSES[size]} ${moodAnimation} inline-block transition-transform duration-200 ${blink ? 'opacity-80' : ''
+            }`}
           role="img"
           aria-label="Owl mascot"
         >

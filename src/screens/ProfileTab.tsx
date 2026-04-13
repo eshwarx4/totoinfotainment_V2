@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LogOut, ChevronRight, BarChart3, Settings, Globe, X } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 
 export default function ProfileTab() {
   const game = useGame();
@@ -46,12 +47,10 @@ export default function ProfileTab() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
-              <div className="text-lg font-black">🪙 {total.totalCoins}</div>
-              <div className="text-[10px] opacity-70 font-medium">{t('profileTab.coins')}</div>
+              <CurrencyDisplay type="coin" value={total.totalCoins} variant="detailed" label={t('profileTab.coins')} />
             </div>
             <div className="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
-              <div className="text-lg font-black">💎 {total.totalDiamonds}</div>
-              <div className="text-[10px] opacity-70 font-medium">{t('profileTab.diamonds')}</div>
+              <CurrencyDisplay type="diamond" value={total.totalDiamonds} variant="detailed" label={t('profileTab.diamonds')} />
             </div>
             <div className="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
               <div className="text-lg font-black">🔥 {total.streak}</div>

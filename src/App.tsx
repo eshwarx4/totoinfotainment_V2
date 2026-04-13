@@ -43,6 +43,7 @@ import TreasureHunt from "./components/play/treasure/TreasureHunt";
 import BlockBuilder from "./components/play/blocks/BlockBuilder";
 import WordFinder from "./components/play/wordfinder/WordFinder";
 import QuickChallenge from "./components/play/challenge/QuickChallenge";
+import MonkeyArrow from "./components/play/monkey/MonkeyArrow";
 
 import NotFound from "./pages/NotFound";
 
@@ -72,53 +73,54 @@ const App = () => (
       <LanguageProvider>
         <GameProvider>
           <BrowserRouter>
-          <Routes>
-            {/* === Onboarding (no navbar) === */}
-            <Route path="/" element={<WithFrame><Welcome /></WithFrame>} />
-            <Route path="/profile" element={<WithFrame><ProfileSetup /></WithFrame>} />
-            <Route path="/tutorial" element={<WithFrame><Tutorial /></WithFrame>} />
+            <Routes>
+              {/* === Onboarding (no navbar) === */}
+              <Route path="/" element={<WithFrame><Welcome /></WithFrame>} />
+              <Route path="/profile" element={<WithFrame><ProfileSetup /></WithFrame>} />
+              <Route path="/tutorial" element={<WithFrame><Tutorial /></WithFrame>} />
 
-            {/* === Main tabs (with navbar) === */}
-            <Route path="/map" element={<WithNavbar><MapScreen /></WithNavbar>} />
-            <Route path="/learn" element={<WithNavbar><LearnTab /></WithNavbar>} />
-            <Route path="/play" element={<WithNavbar><PlayTab /></WithNavbar>} />
-            <Route path="/leaderboard" element={<WithNavbar><LeaderboardTab /></WithNavbar>} />
-            <Route path="/chatbot" element={<WithNavbar><ChatbotTab /></WithNavbar>} />
-            <Route path="/profile-tab" element={<WithNavbar><ProfileTab /></WithNavbar>} />
+              {/* === Main tabs (with navbar) === */}
+              <Route path="/map" element={<WithNavbar><MapScreen /></WithNavbar>} />
+              <Route path="/learn" element={<WithNavbar><LearnTab /></WithNavbar>} />
+              <Route path="/play" element={<WithNavbar><PlayTab /></WithNavbar>} />
+              <Route path="/leaderboard" element={<WithNavbar><LeaderboardTab /></WithNavbar>} />
+              <Route path="/chatbot" element={<WithNavbar><ChatbotTab /></WithNavbar>} />
+              <Route path="/profile-tab" element={<WithNavbar><ProfileTab /></WithNavbar>} />
 
-            {/* === Learn sub-pages (with navbar) === */}
-            <Route path="/learn/category/:category" element={<WithNavbar><CategoryWords /></WithNavbar>} />
-            <Route path="/learn/concept/:conceptId" element={<WithNavbar><ConceptViewer /></WithNavbar>} />
+              {/* === Learn sub-pages (with navbar) === */}
+              <Route path="/learn/category/:category" element={<WithNavbar><CategoryWords /></WithNavbar>} />
+              <Route path="/learn/concept/:conceptId" element={<WithNavbar><ConceptViewer /></WithNavbar>} />
 
-            {/* === Sub-pages (with navbar) === */}
-            <Route path="/world/:worldId" element={<WithNavbar><WorldScreen /></WithNavbar>} />
-            <Route path="/progress" element={<WithNavbar><ProgressScreen /></WithNavbar>} />
-            <Route path="/settings" element={<WithNavbar><SettingsScreen /></WithNavbar>} />
+              {/* === Sub-pages (with navbar) === */}
+              <Route path="/world/:worldId" element={<WithNavbar><WorldScreen /></WithNavbar>} />
+              <Route path="/progress" element={<WithNavbar><ProgressScreen /></WithNavbar>} />
+              <Route path="/settings" element={<WithNavbar><SettingsScreen /></WithNavbar>} />
 
-            {/* === Game flow (phone frame, no navbar — fullscreen immersive) === */}
-            <Route path="/level/:worldId/:levelNum/intro" element={<WithFrame><LevelIntro /></WithFrame>} />
-            <Route path="/level/:worldId/:levelNum/game/:gameNum" element={<WithFrame><GameScreen /></WithFrame>} />
-            <Route path="/level/:worldId/:levelNum/complete" element={<WithFrame><LevelComplete /></WithFrame>} />
-            <Route path="/story/:worldId/:storyType" element={<WithFrame><StoryScreen /></WithFrame>} />
-            <Route path="/cultural/:worldId" element={<WithFrame><CulturalReward /></WithFrame>} />
+              {/* === Game flow (phone frame, no navbar — fullscreen immersive) === */}
+              <Route path="/level/:worldId/:levelNum/intro" element={<WithFrame><LevelIntro /></WithFrame>} />
+              <Route path="/level/:worldId/:levelNum/game/:gameNum" element={<WithFrame><GameScreen /></WithFrame>} />
+              <Route path="/level/:worldId/:levelNum/complete" element={<WithFrame><LevelComplete /></WithFrame>} />
+              <Route path="/story/:worldId/:storyType" element={<WithFrame><StoryScreen /></WithFrame>} />
+              <Route path="/cultural/:worldId" element={<WithFrame><CulturalReward /></WithFrame>} />
 
-            {/* === Play Zone games (phone frame, fullscreen) === */}
-            <Route path="/play/puzzle" element={<WithFrame><PuzzleGame /></WithFrame>} />
-            <Route path="/play/runner" element={<WithFrame><RunnerGame /></WithFrame>} />
-            <Route path="/play/treasure" element={<WithFrame><TreasureHunt /></WithFrame>} />
-            <Route path="/play/blocks" element={<WithFrame><BlockBuilder /></WithFrame>} />
-            <Route path="/play/wordfinder" element={<WithFrame><WordFinder /></WithFrame>} />
-            <Route path="/play/challenge" element={<WithFrame><QuickChallenge /></WithFrame>} />
+              {/* === Play Zone games (phone frame, fullscreen) === */}
+              <Route path="/play/puzzle" element={<WithFrame><PuzzleGame /></WithFrame>} />
+              <Route path="/play/runner" element={<WithFrame><RunnerGame /></WithFrame>} />
+              <Route path="/play/treasure" element={<WithFrame><TreasureHunt /></WithFrame>} />
+              <Route path="/play/blocks" element={<WithFrame><BlockBuilder /></WithFrame>} />
+              <Route path="/play/wordfinder" element={<WithFrame><WordFinder /></WithFrame>} />
+              <Route path="/play/challenge" element={<WithFrame><QuickChallenge /></WithFrame>} />
+              <Route path="/play/monkey" element={<WithFrame><MonkeyArrow /></WithFrame>} />
 
-            {/* === Legacy redirects === */}
-            <Route path="/dashboard" element={<Navigate to="/map" replace />} />
-            <Route path="/words" element={<Navigate to="/map" replace />} />
-            <Route path="/stories" element={<Navigate to="/map" replace />} />
-            <Route path="/quizzes" element={<Navigate to="/map" replace />} />
-            <Route path="/games" element={<Navigate to="/map" replace />} />
+              {/* === Legacy redirects === */}
+              <Route path="/dashboard" element={<Navigate to="/map" replace />} />
+              <Route path="/words" element={<Navigate to="/map" replace />} />
+              <Route path="/stories" element={<Navigate to="/map" replace />} />
+              <Route path="/quizzes" element={<Navigate to="/map" replace />} />
+              <Route path="/games" element={<Navigate to="/map" replace />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </BrowserRouter>
         </GameProvider>
       </LanguageProvider>

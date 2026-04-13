@@ -557,6 +557,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -570,12 +571,31 @@
 }
 
 @keyframes wave-hand {
-  0%, 100% { transform: rotate(0deg); }
-  15% { transform: rotate(14deg); }
-  30% { transform: rotate(-8deg); }
-  45% { transform: rotate(14deg); }
-  60% { transform: rotate(-4deg); }
-  75% { transform: rotate(10deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(14deg);
+  }
+
+  30% {
+    transform: rotate(-8deg);
+  }
+
+  45% {
+    transform: rotate(14deg);
+  }
+
+  60% {
+    transform: rotate(-4deg);
+  }
+
+  75% {
+    transform: rotate(10deg);
+  }
 }
 
 .learn-progress-pill {
@@ -630,9 +650,17 @@
 }
 
 @keyframes curr-bounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* --- TASK 3: Swipeable Cards --- */
@@ -690,6 +718,7 @@
     opacity: 1;
     transform: translate(-50%, -50%) scale(0.8);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -120%) scale(1.2);
@@ -821,7 +850,7 @@
 
   /* Layered gradient background — NOT flat white */
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
@@ -957,8 +986,15 @@
 }
 
 @keyframes catcard-breathe {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-5px) scale(1.02); }
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.02);
+  }
 }
 
 /* ── Word typography ── */
@@ -1010,8 +1046,15 @@
 }
 
 @keyframes catcard-audio-pulse-blue {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 16px rgba(37, 99, 235, 0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.1), 0 4px 20px rgba(37, 99, 235, 0.45); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 16px rgba(37, 99, 235, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.1), 0 4px 20px rgba(37, 99, 235, 0.45);
+  }
 }
 
 .catcard-audio-green {
@@ -1031,8 +1074,15 @@
 }
 
 @keyframes catcard-audio-pulse-green {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 4px 16px rgba(5, 150, 105, 0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1), 0 4px 20px rgba(5, 150, 105, 0.45); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 4px 16px rgba(5, 150, 105, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1), 0 4px 20px rgba(5, 150, 105, 0.45);
+  }
 }
 
 /* ── Practice CTA — dominant gradient button ── */
@@ -1073,15 +1123,23 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   border-radius: 16px;
   animation: catcard-shimmer 3s ease-in-out infinite;
 }
 
 @keyframes catcard-shimmer {
-  0% { left: -100%; }
-  50% { left: 100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  50% {
+    left: 100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 /* ── Bottom action bar ── */
@@ -1121,8 +1179,15 @@
 }
 
 @keyframes catcard-learn-pulse {
-  0%, 100% { box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3); }
-  50% { box-shadow: 0 3px 16px rgba(16, 185, 129, 0.5); }
+
+  0%,
+  100% {
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 3px 16px rgba(16, 185, 129, 0.5);
+  }
 }
 
 .catcard-coin-icon {
@@ -1186,10 +1251,12 @@
     opacity: 1;
     transform: translate(-50%, 0) scale(0.5);
   }
+
   40% {
     opacity: 1;
     transform: translate(-50%, -50px) scale(1.3);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -100px) scale(1);
@@ -1198,9 +1265,20 @@
 
 /* ── Sparkle particles on learn ── */
 @keyframes catcard-sparkle {
-  0% { opacity: 0; transform: scale(0) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(180deg); }
-  100% { opacity: 0; transform: scale(0) rotate(360deg); }
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(360deg);
+  }
 }
 
 /* ── Exit animations ── */
@@ -1277,7 +1355,7 @@
 
 .catcard-completion-inner {
   text-align: center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
   border-radius: 32px;
   padding: 44px 28px 36px;
   width: 100%;
@@ -1294,9 +1372,11 @@
     opacity: 0;
     transform: scale(0.85) translateY(30px);
   }
+
   60% {
     transform: scale(1.02) translateY(-4px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1318,8 +1398,13 @@
 }
 
 @keyframes voice-overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .voice-practice-panel {
@@ -1372,9 +1457,17 @@
 }
 
 @keyframes voice-correct-pop {
-  0% { transform: scale(0.8); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.8);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Pulse rings */
@@ -1387,15 +1480,24 @@
   animation: voice-pulse-expand 1.5s ease-out infinite;
 }
 
-.voice-pulse-ring-1 { animation-delay: 0s; }
-.voice-pulse-ring-2 { animation-delay: 0.5s; }
-.voice-pulse-ring-3 { animation-delay: 1s; }
+.voice-pulse-ring-1 {
+  animation-delay: 0s;
+}
+
+.voice-pulse-ring-2 {
+  animation-delay: 0.5s;
+}
+
+.voice-pulse-ring-3 {
+  animation-delay: 1s;
+}
 
 @keyframes voice-pulse-expand {
   0% {
     transform: scale(1);
     opacity: 0.6;
   }
+
   100% {
     transform: scale(2.2);
     opacity: 0;
@@ -1419,8 +1521,13 @@
 }
 
 @keyframes voice-wave-bounce {
-  0% { height: 8px; }
-  100% { height: 28px; }
+  0% {
+    height: 8px;
+  }
+
+  100% {
+    height: 28px;
+  }
 }
 
 /* Spinner */
@@ -1434,7 +1541,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Result animations */
@@ -1451,6 +1560,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1546,8 +1656,8 @@
   inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 60% 50% at 0% 50%, rgba(255,255,255,0.35), transparent),
-    radial-gradient(ellipse 40% 60% at 100% 30%, rgba(255,255,255,0.2), transparent);
+    radial-gradient(ellipse 60% 50% at 0% 50%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(ellipse 40% 60% at 100% 30%, rgba(255, 255, 255, 0.2), transparent);
   animation: nudge-wave-drift 8s ease-in-out infinite alternate;
   pointer-events: none;
 }
@@ -1557,6 +1667,7 @@
     background-position: 0% 50%, 100% 30%;
     opacity: 1;
   }
+
   100% {
     background-position: 30% 60%, 70% 40%;
     opacity: 0.7;
@@ -1586,16 +1697,20 @@
     transform: translateY(0) scale(0.6) rotate(0deg);
     opacity: 0;
   }
+
   15% {
     opacity: 0.35;
   }
+
   50% {
     transform: translateY(-40px) scale(0.9) rotate(15deg);
     opacity: 0.25;
   }
+
   85% {
     opacity: 0.1;
   }
+
   100% {
     transform: translateY(-90px) scale(0.5) rotate(-10deg);
     opacity: 0;
@@ -1666,8 +1781,15 @@
 }
 
 @keyframes nudge-icon-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
 }
 
 /* Title & subtitle */
@@ -1731,6 +1853,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1788,10 +1911,13 @@
 }
 
 @keyframes nudge-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.4;
     border-color: inherit;
   }
+
   50% {
     opacity: 0.8;
     border-color: inherit;
@@ -1799,61 +1925,75 @@
 }
 
 /* ==========================================
-   CANDY CRUSH STYLE MAP - 3D Effects
+   MAP MODULE - Premium Immersive Design
    ========================================== */
 
-/* Main container */
+/* Main container — vibrant green game world */
 .candy-map-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(180deg, #2E7D32 0%, #388E3C 30%, #43A047 60%, #4CAF50 100%);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Fixed header */
+
+
+/* Fixed header — green game bar */
 .candy-map-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(27, 94, 32, 0.95), rgba(46, 125, 50, 0.92));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .candy-avatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #66BB6A, #43A047);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.25);
 }
+
+
 
 .candy-currency {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px 14px;
   border-radius: 20px;
-  color: white;
+  color: #fff;
   font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Scrollable map area */
 .candy-map-scroll {
+  flex: 1;
   padding-bottom: 120px;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: relative;
+  z-index: 1;
 }
 
 .candy-map-scroll::-webkit-scrollbar {
@@ -1873,15 +2013,27 @@
   overflow: hidden;
 }
 
+/* Depth overlay for worlds */
+.candy-world-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(0, 0, 0, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .candy-world-locked {
-  filter: grayscale(0.6) brightness(0.7);
+  filter: grayscale(0.7) brightness(0.5);
 }
 
 .candy-world-locked .candy-world-bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 10;
 }
 
@@ -1893,14 +2045,15 @@
   z-index: 1;
 }
 
-/* Floating particles */
+/* Floating particles — subtle luminous dots */
 .candy-particle {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.6);
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
-  animation: candy-float 4s ease-in-out infinite;
+  animation: candy-float 6s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
 .candy-particle-1 {
@@ -1912,78 +2065,90 @@
 .candy-particle-2 {
   top: 50%;
   right: 20%;
-  animation-delay: 1.5s;
-  width: 6px;
-  height: 6px;
+  animation-delay: 2s;
+  width: 3px;
+  height: 3px;
 }
 
 .candy-particle-3 {
   bottom: 30%;
   left: 30%;
-  animation-delay: 3s;
-  width: 10px;
-  height: 10px;
+  animation-delay: 4s;
+  width: 5px;
+  height: 5px;
 }
 
 @keyframes candy-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
-    opacity: 0.6;
+    opacity: 0.3;
   }
+
   50% {
-    transform: translateY(-20px) scale(1.2);
-    opacity: 1;
+    transform: translateY(-15px) scale(1.1);
+    opacity: 0.7;
   }
 }
 
-/* World banner */
+/* World banner — compact game label */
 .candy-world-banner {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 10px;
+  left: 10px;
+  right: auto;
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  padding: 12px 16px;
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  padding: 8px 14px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* World connector */
+
+
+/* World connector — refined */
 .candy-world-connector {
   position: relative;
-  height: 40px;
+  height: 32px;
   background: linear-gradient(180deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    transparent 100%
-  );
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .candy-connector-arrow {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.15);
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: candy-bounce-down 1.5s ease-in-out infinite;
+  animation: candy-bounce-down 2s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+
+
 @keyframes candy-bounce-down {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
-    transform: translateY(5px);
+    transform: translateY(4px);
   }
 }
 
@@ -1994,8 +2159,16 @@
   background: linear-gradient(180deg, transparent, rgba(255, 215, 0, 0.1));
 }
 
+
+
+/* World detail page */
+.candy-world-detail {
+  position: relative;
+  background: transparent;
+}
+
 /* ==========================================
-   CANDY LEVEL NODES - 3D Style
+   LEVEL NODES - Refined 3D Style
    ========================================== */
 
 .candy-level-wrapper {
@@ -2004,7 +2177,7 @@
 }
 
 .candy-level-wrapper:hover:not(:disabled) {
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 .candy-level-wrapper:active:not(:disabled) {
@@ -2014,64 +2187,76 @@
 /* Base node style */
 .candy-node {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   transition: all 0.3s ease;
   overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-/* 3D highlight effect */
+/* Subtle highlight effect */
 .candy-node-highlight {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 50%;
+  height: 45%;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.05) 60%,
+      transparent 100%);
   border-radius: 50% 50% 0 0;
   pointer-events: none;
 }
 
-/* 3D shadow effect */
+/* Shadow under node */
 .candy-node-shadow {
   position: absolute;
-  bottom: -4px;
-  left: 4px;
-  right: 4px;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.3);
+  bottom: -5px;
+  left: 6px;
+  right: 6px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 50%;
-  filter: blur(4px);
+  filter: blur(5px);
   pointer-events: none;
   z-index: -1;
 }
 
-/* Current level - pulsing */
+/* Node outer glow ring */
+.candy-node::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Current level — vivid pulse */
 .candy-node-current {
-  background: linear-gradient(135deg, #4ade80, #22c55e);
+  background: linear-gradient(135deg, #34d399, #10b981);
   color: white;
+  border-color: rgba(52, 211, 153, 0.4);
   box-shadow:
-    0 4px 0 #15803d,
-    0 8px 20px rgba(34, 197, 94, 0.5);
-  animation: candy-pulse 2s ease-in-out infinite;
+    0 3px 0 #059669,
+    0 6px 20px rgba(16, 185, 129, 0.5);
+  animation: candy-pulse 2.5s ease-in-out infinite;
 }
 
 .candy-node-glow {
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(74, 222, 128, 0.4) 0%, transparent 70%);
-  animation: candy-glow-pulse 2s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.35) 0%, transparent 70%);
+  animation: candy-glow-pulse 2.5s ease-in-out infinite;
   transform: translate(-50%, -50%);
   position: absolute;
   top: 50%;
@@ -2079,57 +2264,66 @@
 }
 
 @keyframes candy-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow:
-      0 4px 0 #15803d,
-      0 8px 20px rgba(34, 197, 94, 0.5);
+      0 3px 0 #059669,
+      0 6px 20px rgba(16, 185, 129, 0.5);
   }
+
   50% {
-    transform: scale(1.05);
+    transform: scale(1.06);
     box-shadow:
-      0 4px 0 #15803d,
-      0 12px 30px rgba(34, 197, 94, 0.6);
+      0 3px 0 #059669,
+      0 10px 28px rgba(16, 185, 129, 0.6);
   }
 }
 
 @keyframes candy-glow-pulse {
-  0%, 100% {
-    opacity: 0.6;
+
+  0%,
+  100% {
+    opacity: 0.4;
     transform: translate(-50%, -50%) scale(1);
   }
+
   50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.15);
   }
 }
 
 /* Completed level */
 .candy-node-completed {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  background: linear-gradient(135deg, #818cf8, #6366f1);
   color: white;
+  border-color: rgba(129, 140, 248, 0.3);
   box-shadow:
-    0 4px 0 #1d4ed8,
-    0 6px 15px rgba(59, 130, 246, 0.4);
+    0 3px 0 #4338ca,
+    0 6px 15px rgba(99, 102, 241, 0.4);
 }
 
 /* Unlocked but not played */
 .candy-node-unlocked {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #78350f;
+  color: #451a03;
+  border-color: rgba(251, 191, 36, 0.3);
   box-shadow:
-    0 4px 0 #b45309,
+    0 3px 0 #b45309,
     0 6px 15px rgba(245, 158, 11, 0.4);
 }
 
 /* Locked level */
 .candy-node-locked {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  color: #9ca3af;
+  background: linear-gradient(135deg, #374151, #1f2937);
+  color: #6b7280;
+  border-color: rgba(55, 65, 81, 0.5);
   box-shadow:
-    0 4px 0 #374151,
-    0 4px 10px rgba(0, 0, 0, 0.3);
-  opacity: 0.7;
+    0 3px 0 #111827,
+    0 4px 10px rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
 }
 
 /* Stars display */
@@ -2143,24 +2337,27 @@
 /* Level label */
 .candy-level-label {
   margin-top: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.7);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* ==========================================
-   CANDY MAP RESPONSIVE
+   MAP RESPONSIVE
    ========================================== */
 
 @media (min-width: 640px) {
   .candy-node {
-    width: 64px;
-    height: 64px;
-    font-size: 20px;
+    width: 62px;
+    height: 62px;
+    font-size: 19px;
   }
 
   .candy-world-bg {
@@ -2169,7 +2366,7 @@
 }
 
 /* ==========================================
-   CANDY MAP BONUS ANIMATIONS
+   MAP BONUS ANIMATIONS
    ========================================== */
 
 /* Sparkle effect for new unlocks */
@@ -2178,6 +2375,7 @@
     transform: scale(0) rotate(0deg);
     opacity: 1;
   }
+
   100% {
     transform: scale(1.5) rotate(180deg);
     opacity: 0;
@@ -2198,9 +2396,11 @@
     transform: scale(0.5);
     opacity: 0;
   }
+
   50% {
-    transform: scale(1.2);
+    transform: scale(1.15);
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -2217,9 +2417,11 @@
     transform: scale(0) rotate(-180deg);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.3) rotate(0deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
     opacity: 1;
@@ -2230,58 +2432,19 @@
   animation: candy-star-earn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* ==========================================
-   CANDY MAP - Additional Polish
-   ========================================== */
-
-/* Ensure map fills screen properly */
-.candy-map-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.candy-map-scroll {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* World detail page */
-.candy-world-detail {
-  position: relative;
-  background: transparent;
-}
-
-/* Enhanced world backgrounds with depth */
-.candy-world-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(0,0,0,0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* Shimmer effect for unlocked worlds */
 .candy-world-section:not(.candy-world-locked) .candy-world-bg::after {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
-  width: 50%;
+  width: 40%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.1) 50%,
-    transparent 100%
-  );
-  animation: candy-shimmer 4s ease-in-out infinite;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%);
+  animation: candy-shimmer 5s ease-in-out infinite;
   pointer-events: none;
   z-index: 2;
 }
@@ -2290,97 +2453,97 @@
   0% {
     left: -100%;
   }
-  50%, 100% {
+
+  50%,
+  100% {
     left: 200%;
   }
 }
 
-/* Enhanced node shadows for 3D depth */
-.candy-node::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Bouncing animation for current level */
+/* Subtle bounce for current level */
 .candy-node-current {
-  animation: candy-bounce 1s ease-in-out infinite, candy-pulse 2s ease-in-out infinite;
+  animation: candy-subtle-bounce 2s ease-in-out infinite, candy-pulse 2.5s ease-in-out infinite;
 }
 
-@keyframes candy-bounce {
-  0%, 100% {
+@keyframes candy-subtle-bounce {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
   }
 }
 
-/* Trophy glow for completed worlds */
+/* Banner glow for unlocked worlds */
 .candy-world-section:not(.candy-world-locked) .candy-world-banner::before {
   content: '';
   position: absolute;
   inset: -1px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(255,215,0,0.3) 0%, transparent 50%, rgba(255,215,0,0.2) 100%);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
   z-index: -1;
   opacity: 0;
-  animation: candy-trophy-glow 3s ease-in-out infinite;
+  animation: candy-trophy-glow 4s ease-in-out infinite;
 }
 
 @keyframes candy-trophy-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
   }
+
   50% {
-    opacity: 0.6;
+    opacity: 0.7;
   }
 }
 
 /* Stars twinkle animation */
 .candy-stars .fill-yellow-400 {
-  animation: candy-twinkle 2s ease-in-out infinite;
+  animation: candy-twinkle 2.5s ease-in-out infinite;
 }
 
 .candy-stars .fill-yellow-400:nth-child(2) {
-  animation-delay: 0.3s;
+  animation-delay: 0.4s;
 }
 
 .candy-stars .fill-yellow-400:nth-child(3) {
-  animation-delay: 0.6s;
+  animation-delay: 0.8s;
 }
 
 @keyframes candy-twinkle {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: brightness(1) drop-shadow(0 0 2px rgba(250, 204, 21, 0.5));
   }
+
   50% {
-    filter: brightness(1.3) drop-shadow(0 0 6px rgba(250, 204, 21, 0.8));
+    filter: brightness(1.4) drop-shadow(0 0 8px rgba(250, 204, 21, 0.9));
   }
 }
 
-/* Progress trail glow */
+/* Trail glow */
 .candy-world-section:not(.candy-world-locked) svg path:first-child {
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
 }
 
-/* Level hover lift effect */
+/* Level hover lift */
 .candy-level-wrapper:not(:disabled):hover .candy-node {
   box-shadow:
-    0 6px 0 currentColor,
-    0 12px 25px rgba(0, 0, 0, 0.3);
+    0 5px 0 currentColor,
+    0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
 /* Responsive adjustments */
 @media (max-width: 380px) {
   .candy-node {
-    width: 48px;
-    height: 48px;
-    font-size: 16px;
+    width: 46px;
+    height: 46px;
+    font-size: 15px;
   }
 
   .candy-world-bg {
@@ -2388,7 +2551,197 @@
   }
 
   .candy-level-label {
-    font-size: 10px;
+    font-size: 9px;
     padding: 1px 6px;
   }
+}
+
+/* ==========================================
+   MAP TITLE & MILESTONE GATES
+   ========================================== */
+
+/* Totopara title banner */
+.candy-map-title {
+  padding: 12px 20px 8px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Milestone unlock gate between worlds */
+.candy-milestone-gate {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 0;
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.15) 50%,
+      rgba(0, 0, 0, 0.08) 100%);
+}
+
+.candy-milestone-path {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.candy-milestone-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.25),
+      transparent);
+}
+
+.candy-milestone-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.candy-milestone-unlocked {
+  background: linear-gradient(135deg, #66BB6A, #43A047);
+  color: white;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.candy-milestone-locked {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.candy-milestone-text {
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================
+   UNIFIED CURRENCY DISPLAY SYSTEM
+   ========================================== */
+
+/* Compact variant — for headers and nav */
+.currency-display-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 0.3s ease;
+}
+
+.currency-coin-compact {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.currency-diamond-compact {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.currency-display-icon-sm {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.currency-coin-icon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.currency-diamond-icon {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  color: white;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+}
+
+.currency-display-val {
+  letter-spacing: -0.02em;
+}
+
+/* Detailed variant — for profile cards */
+.currency-display-detailed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  transition: transform 0.3s ease;
+}
+
+.currency-coin-bg {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.currency-diamond-bg {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.currency-display-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.currency-display-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.currency-display-value {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.currency-display-label {
+  font-size: 10px;
+  opacity: 0.7;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Bounce animation (shared) */
+@keyframes currency-bounce-anim {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.currency-bounce {
+  animation: currency-bounce-anim 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
