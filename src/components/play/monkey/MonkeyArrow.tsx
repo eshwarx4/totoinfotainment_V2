@@ -202,12 +202,12 @@ export default function MonkeyArrow() {
         const dx = coords.x - bowX;
         const dy = coords.y - bowY;
         angleRef.current = Math.atan2(dy, dx);
-        // Clamp angle
-        angleRef.current = Math.max(-0.8, Math.min(0.3, angleRef.current));
+        // Clamp angle: allow -1.5 (pointing almost straight up) to 0.5 (pointing down-right)
+        angleRef.current = Math.max(-1.5, Math.min(0.5, angleRef.current));
 
-        // Power based on distance
+        // Power based on distance - scale up for easier aiming
         const dist = Math.sqrt(dx * dx + dy * dy);
-        powerRef.current = Math.min(dist, MAX_POWER);
+        powerRef.current = Math.min(dist * 1.5, MAX_POWER);
     }, [getCoords]);
 
     const onPointerUp = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -215,7 +215,7 @@ export default function MonkeyArrow() {
         e.preventDefault();
         aimingRef.current = false;
 
-        if (powerRef.current < 30) {
+        if (powerRef.current < 15) {
             powerRef.current = 0;
             return;
         }
@@ -223,7 +223,7 @@ export default function MonkeyArrow() {
         const { h } = dimsRef.current;
         const bowX = 80;
         const bowY = h * 0.7;
-        const speed = (powerRef.current / MAX_POWER) * 22;
+        const speed = (powerRef.current / MAX_POWER) * 28;
 
         sfx.playShoot();
         arrowRef.current = {
@@ -606,8 +606,8 @@ export default function MonkeyArrow() {
             ctx.restore();
 
             // === TRAJECTORY LINE ===
-            if (aimingRef.current && powerRef.current > 30 && canShootRef.current) {
-                const speed = (powerRef.current / MAX_POWER) * 22;
+            if (aimingRef.current && powerRef.current > 15 && canShootRef.current) {
+                const speed = (powerRef.current / MAX_POWER) * 28;
                 let px = bowX + 50 + Math.cos(angleRef.current) * 30;
                 let py = bowY + Math.sin(angleRef.current) * 30;
                 let vx = Math.cos(angleRef.current) * speed;
