@@ -71,8 +71,8 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/BTP_Toto_Infotainment.git
-   cd BTP_Toto_Infotainment
+   git clone https://github.com/eshwarx4/BTP-Web-version-2.git
+   cd BTP-Web-version-2
    ```
 
 2. **Install dependencies**
@@ -439,7 +439,7 @@ This project is part of a BTP (Bachelor's Thesis Project). All rights reserved.
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work*
+- **BTP Team** - *Development*
 
 ## 🙏 Acknowledgments
 
