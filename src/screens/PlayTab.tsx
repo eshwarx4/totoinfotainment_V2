@@ -77,6 +77,16 @@ const GAMES = [
         route: '/play/monkey',
         delay: 480,
     },
+    {
+        id: 'spelling',
+        icon: '📝',
+        titleKey: 'play.spelling',
+        descKey: 'play.spellingDesc',
+        gradient: 'from-indigo-400 to-blue-600',
+        shadow: 'rgba(99, 102, 241, 0.4)',
+        route: '/play/spelling',
+        delay: 560,
+    },
 ];
 
 const MASCOT_MESSAGE_KEYS = [
@@ -93,12 +103,9 @@ export default function PlayTab() {
     const { t } = useLanguage();
     const totalProgress = game.getTotalProgress();
     const [mascotMsgKey, setMascotMsgKey] = useState('');
-    const [cardsVisible, setCardsVisible] = useState(false);
 
     useEffect(() => {
         setMascotMsgKey(MASCOT_MESSAGE_KEYS[Math.floor(Math.random() * MASCOT_MESSAGE_KEYS.length)]);
-        const timer = setTimeout(() => setCardsVisible(true), 200);
-        return () => clearTimeout(timer);
     }, []);
 
     return (
@@ -170,10 +177,7 @@ export default function PlayTab() {
                             <button
                                 key={g.id}
                                 onClick={() => navigate(g.route)}
-                                className={`game-select-card group ${cardsVisible ? 'game-card-visible' : 'game-card-hidden'}`}
-                                style={{
-                                    transitionDelay: `${g.delay}ms`,
-                                }}
+                                className="game-select-card group"
                             >
                                 <div
                                     className={`relative bg-gradient-to-br ${g.gradient} rounded-2xl p-4 overflow-hidden transition-all duration-200 active:scale-[0.95]`}
