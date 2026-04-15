@@ -4,7 +4,7 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, generateOptions } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
-import GameTutorial, { useTutorial } from '@/components/play/GameTutorial';
+import GameTutorial, { useTutorial, ARCHER_TUTORIAL_STEPS } from '@/components/play/GameTutorial';
 import { useGameSFX } from '@/hooks/useGameSFX';
 
 // ==========================================
@@ -14,14 +14,6 @@ const TOTAL_ROUNDS = 8;
 const GRAVITY = 0.25;
 const ARROW_SPEED = 18;
 const TARGET_SIZE = 70;
-
-const TUTORIAL_STEPS = [
-    { emoji: '🏹', title: 'Forest Archer!', description: 'You are an archer in the forest. Shoot arrows at word targets!' },
-    { emoji: '🎯', title: 'Find the Target', description: 'Look for the wooden sign with the correct Toto word matching the English word shown.' },
-    { emoji: '👆', title: 'Aim & Shoot', description: 'Tap and drag to aim. The dotted line shows your arrow path. Release to shoot!' },
-    { emoji: '🌲', title: 'Hit the Right One', description: 'Only one target has the correct answer. Hit it to score points!' },
-    { emoji: '⭐', title: 'Master the Forest', description: 'Complete all rounds to become a Forest Archer Master!' },
-];
 
 interface Target {
     x: number;
@@ -580,6 +572,115 @@ function drawPowerBar(ctx: CanvasRenderingContext2D, x: number, y: number, power
 }
 
 // ==========================================
+// TUTORIAL DEMO COMPONENT
+// Shows animated demo of the game during tutorial
+// ==========================================
+function TutorialGameDemo() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const frameRef = useRef(0);
+    const animRef = useRef<number>(0);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        if (!parent) return;
+
+        const w = parent.clientWidth || 400;
+        const h = parent.clientHeight || 600;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Demo target
+        const demoTarget = {
+            x: w * 0.65,
+            y: h * 0.35,
+            scale: 1.1
+        };
+
+        const loop = () => {
+            if (!ctx) return;
+            frameRef.current++;
+            const f = frameRef.current;
+
+            // Draw forest background
+            drawForestBackground(ctx, w, h, f);
+
+            // Draw demo target with wobble
+            const wobble = Math.sin(f * 0.05) * 3;
+            ctx.save();
+            ctx.translate(demoTarget.x, demoTarget.y + wobble);
+
+            const size = TARGET_SIZE * demoTarget.scale;
+
+            // Post
+            ctx.fillStyle = '#6D4C41';
+            ctx.fillRect(-4, 0, 8, size * 0.6);
+
+            // Board
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 5;
+            const boardGrad = ctx.createLinearGradient(-size * 0.6, -size * 0.4, size * 0.6, size * 0.4);
+            boardGrad.addColorStop(0, '#FFF8E1');
+            boardGrad.addColorStop(0.5, '#FFECB3');
+            boardGrad.addColorStop(1, '#FFE082');
+            ctx.fillStyle = boardGrad;
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.6, -size * 0.5, size * 1.2, size * 0.8, 8);
+            ctx.fill();
+
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = '#8D6E63';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.6, -size * 0.5, size * 1.2, size * 0.8, 8);
+            ctx.stroke();
+
+            // Word
+            ctx.fillStyle = '#3E2723';
+            ctx.font = `bold ${Math.round(size * 0.22)}px Nunito, system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Target', 0, -size * 0.1);
+            ctx.fillStyle = '#6D4C41';
+            ctx.font = `${Math.round(size * 0.14)}px Nunito, system-ui, sans-serif`;
+            ctx.fillText('(word)', 0, size * 0.15);
+
+            ctx.restore();
+
+            // Draw bow and hands (demo aiming animation)
+            const demoAim: AimState = {
+                aiming: Math.sin(f * 0.02) > 0,
+                angle: -0.2 + Math.sin(f * 0.015) * 0.15,
+                power: 40 + Math.sin(f * 0.03) * 20,
+                startY: 0
+            };
+            drawBowAndHands(ctx, w, h, demoAim, f);
+
+            // Show trajectory when "aiming"
+            if (demoAim.aiming && demoAim.power >= 20) {
+                const startX = w * 0.2;
+                const startY = h * 0.55;
+                drawTrajectory(ctx, startX, startY, demoAim.angle, demoAim.power);
+            }
+
+            animRef.current = requestAnimationFrame(loop);
+        };
+
+        animRef.current = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(animRef.current);
+    }, []);
+
+    return <canvas ref={canvasRef} className="block absolute inset-0" />;
+}
+
+// ==========================================
 // MAIN COMPONENT
 // ==========================================
 export default function MonkeyArrow() {
@@ -891,10 +992,22 @@ export default function MonkeyArrow() {
     // ==========================================
     // SCREENS
     // ==========================================
+    // Tutorial now shows the real game with interactive overlay
     if (phase === 'tutorial') {
         return (
             <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
-                <GameTutorial gameId="forest-archer" steps={TUTORIAL_STEPS} onComplete={handleTutorialDone} />
+                <div className="flex flex-col relative" style={{ height: 'calc(100vh - 56px)' }}>
+                    {/* Demo game canvas in background */}
+                    <div className="flex-1 relative overflow-hidden">
+                        <TutorialGameDemo />
+                    </div>
+                    {/* Interactive tutorial overlay */}
+                    <GameTutorial
+                        gameId="forest-archer"
+                        steps={ARCHER_TUTORIAL_STEPS}
+                        onComplete={handleTutorialDone}
+                    />
+                </div>
             </PlayGameShell>
         );
     }
