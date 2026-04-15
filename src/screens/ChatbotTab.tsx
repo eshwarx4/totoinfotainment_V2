@@ -280,59 +280,104 @@ function findResponse(input: string, lang: Lang): string {
 }
 
 // ==========================================
-// TTS — Chunked for long stories
+// TTS — Natural voice with paragraph chunking
 // ==========================================
-let ttsQueue: SpeechSynthesisUtterance[] = [];
+let ttsQueue: string[] = [];
+let ttsLang: Lang = 'en';
+let ttsStopped = false;
+
+// Pick the best available voice for a language
+function getBestVoice(lang: Lang): SpeechSynthesisVoice | null {
+  try {
+    const voices = speechSynthesis.getVoices();
+    const locale = lang === 'bn' ? 'bn' : 'en';
+    // Prefer: Google voices > natural/premium > any matching voice
+    const matching = voices.filter(v => v.lang.startsWith(locale));
+    const google = matching.find(v => v.name.includes('Google'));
+    const natural = matching.find(v => v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced'));
+    const female = matching.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Karen'));
+    return google || natural || female || matching[0] || null;
+  } catch { return null; }
+}
+
+function cleanForSpeech(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')          // strip markdown bold
+    .replace(/[#_~`]/g, '')                       // strip other markdown
+    .replace(/\b\d+️⃣\b/g, '')                    // strip keycap emojis
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '') // strip emojis
+    .replace(/[📖🎮🏔️❓🌱😊🦉👋🤗💛🌟💪🐯🥁🎋🪔🔥☀️🌊🎵🎶✨❤️🎉💃🍚🥬🐟🍵🐘🦌🐦⭐🪙🧩🏃🗺️🏗️🔍⚡🐒📝🤔👇🏆👑🌲🌾🌿🏡🦶🐾📱📚😆😂😴💫👥🎶🪙]/g, '')
+    .replace(/\n{2,}/g, '\n')                     // collapse multiple newlines
+    .replace(/\n/g, '. ')                         // newlines to pauses
+    .replace(/\.{2,}/g, '.')                      // collapse dots
+    .replace(/\s{2,}/g, ' ')                      // collapse spaces
+    .trim();
+}
 
 function speakText(text: string, lang: Lang) {
   try {
     stopSpeaking();
-    // Clean text: strip markdown, emojis, extra whitespace
-    const clean = text
-      .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n]/gu, ' ')
-      .replace(/\n+/g, '. ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (!clean) return;
+    ttsStopped = false;
+    ttsLang = lang;
 
-    // Split into chunks at sentence boundaries (max ~150 chars each)
-    const sentences = clean.split(/(?<=[.!?।])\s+/);
-    const chunks: string[] = [];
-    let current = '';
-    for (const s of sentences) {
-      if ((current + ' ' + s).length > 150 && current) {
-        chunks.push(current.trim());
-        current = s;
-      } else {
-        current += (current ? ' ' : '') + s;
+    const clean = cleanForSpeech(text);
+    if (!clean || clean.length < 2) return;
+
+    // For short text (<300 chars), speak as one utterance
+    if (clean.length < 300) {
+      ttsQueue = [clean];
+    } else {
+      // Split by paragraph-like boundaries (double newline was turned into ". ")
+      // Then group into ~250 char chunks for smooth flow
+      const sentences = clean.split(/(?<=[.!?।])\s+/);
+      ttsQueue = [];
+      let current = '';
+      for (const s of sentences) {
+        if ((current + ' ' + s).length > 250 && current) {
+          ttsQueue.push(current.trim());
+          current = s;
+        } else {
+          current += (current ? ' ' : '') + s;
+        }
       }
+      if (current.trim()) ttsQueue.push(current.trim());
     }
-    if (current.trim()) chunks.push(current.trim());
 
-    // Queue each chunk
-    ttsQueue = chunks.map(chunk => {
-      const u = new SpeechSynthesisUtterance(chunk);
-      u.lang = lang === 'bn' ? 'bn-IN' : 'en-US';
-      u.rate = 0.9;
-      u.pitch = 1.05;
-      return u;
-    });
-
-    // Play sequentially
-    function playNext() {
-      if (ttsQueue.length === 0) return;
-      const next = ttsQueue.shift()!;
-      next.onend = playNext;
-      next.onerror = playNext;
-      speechSynthesis.speak(next);
-    }
-    playNext();
+    playNextChunk();
   } catch { /* ignore */ }
 }
 
+function playNextChunk() {
+  if (ttsStopped || ttsQueue.length === 0) return;
+  const chunk = ttsQueue.shift()!;
+  const u = new SpeechSynthesisUtterance(chunk);
+  u.lang = ttsLang === 'bn' ? 'bn-IN' : 'en-US';
+  u.rate = 0.92;
+  u.pitch = 1.0;
+
+  // Use best voice if available
+  const voice = getBestVoice(ttsLang);
+  if (voice) u.voice = voice;
+
+  // Small pause between chunks for natural breathing
+  u.onend = () => {
+    if (!ttsStopped && ttsQueue.length > 0) {
+      setTimeout(playNextChunk, 300);
+    }
+  };
+  u.onerror = () => {
+    if (!ttsStopped && ttsQueue.length > 0) {
+      setTimeout(playNextChunk, 300);
+    }
+  };
+
+  speechSynthesis.speak(u);
+}
+
 function stopSpeaking() {
-  try { speechSynthesis.cancel(); ttsQueue = []; } catch { }
+  ttsStopped = true;
+  ttsQueue = [];
+  try { speechSynthesis.cancel(); } catch { }
 }
 
 // ==========================================
@@ -440,7 +485,7 @@ export default function ChatbotTab() {
   const placeholder = lang === 'bn' ? 'যেকোনো কিছু জিজ্ঞেস করো... 😊' : 'Ask me anything... 😊';
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 0px)', background: 'linear-gradient(180deg, #EDE9FE 0%, #FFF7ED 50%, #F0FDF4 100%)' }}>
+    <div className="flex flex-col pb-20" style={{ height: 'calc(100vh - 80px)', background: 'linear-gradient(180deg, #EDE9FE 0%, #FFF7ED 50%, #F0FDF4 100%)' }}>
       {/* Header */}
       <div className="px-4 py-3 flex-shrink-0 z-10" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
         <div className="max-w-lg mx-auto flex items-center justify-between">
@@ -472,8 +517,8 @@ export default function ChatbotTab() {
               )}
               <div className="flex flex-col max-w-[82%]">
                 <div className={`px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed whitespace-pre-line ${msg.sender === 'user'
-                    ? 'bg-violet-600 text-white rounded-br-md shadow-md'
-                    : 'bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100'
+                  ? 'bg-violet-600 text-white rounded-br-md shadow-md'
+                  : 'bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100'
                   }`}>
                   {msg.sender === 'bot' ? formatText(msg.text) : msg.text}
                 </div>
@@ -510,12 +555,12 @@ export default function ChatbotTab() {
             <p className="text-xs text-violet-600 font-semibold mb-2 flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> {lang === 'bn' ? 'ট্যাপ করে জিজ্ঞেস করো!' : 'Tap to ask me!'}
             </p>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="grid grid-cols-3 gap-2">
               {QUICK_PROMPTS[lang].map(p => (
                 <button key={p.label} onClick={() => handleSend(p.text)}
-                  className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-sm border border-gray-100 active:scale-95 hover:shadow-md transition-all whitespace-nowrap">
-                  <span className="text-lg">{p.emoji}</span>
-                  <span className="text-[11px] font-semibold text-gray-700">{p.label}</span>
+                  className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-sm border border-gray-100 active:scale-95 hover:shadow-md transition-all text-center">
+                  <span className="text-2xl mb-1">{p.emoji}</span>
+                  <span className="text-[11px] font-semibold text-gray-700 leading-tight">{p.label}</span>
                 </button>
               ))}
             </div>
@@ -560,7 +605,7 @@ export default function ChatbotTab() {
       )}
 
       {/* Input bar */}
-      <div className="bg-white/95 backdrop-blur-sm px-4 py-3 pb-[88px] flex-shrink-0 border-t border-gray-200">
+      <div className="bg-white/95 backdrop-blur-sm px-4 py-3 flex-shrink-0 border-t border-gray-200">
         <div className="max-w-lg mx-auto flex items-center gap-2">
           <input
             type="text" value={input}
