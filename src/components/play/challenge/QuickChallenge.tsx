@@ -4,6 +4,7 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, pickRandom, generateOptions } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 const TOTAL_TIME = 60; // 60 seconds challenge
 const POINTS_CORRECT = 10;
@@ -25,6 +26,7 @@ function generateQuestions(count: number): Question[] {
 }
 
 export default function QuickChallenge() {
+    const sfx = useGameSFX();
     const [phase, setPhase] = useState<'menu' | 'playing' | 'results'>('menu');
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQ, setCurrentQ] = useState(0);
@@ -78,6 +80,7 @@ export default function QuickChallenge() {
         setFeedback(isCorrect ? 'correct' : 'wrong');
 
         if (isCorrect) {
+            sfx.playCorrect();
             const streakBonus = streak >= 2 ? STREAK_BONUS * (streak - 1) : 0;
             setScore(s => s + POINTS_CORRECT + streakBonus);
             setCorrect(c => c + 1);
@@ -87,6 +90,7 @@ export default function QuickChallenge() {
                 return next;
             });
         } else {
+            sfx.playWrong();
             setScore(s => Math.max(0, s + POINTS_WRONG));
             setWrong(w => w + 1);
             setStreak(0);
@@ -188,8 +192,8 @@ export default function QuickChallenge() {
                                     onClick={() => handleAnswer(opt.id)}
                                     disabled={!!feedback}
                                     className={`px-3 py-3 rounded-xl font-bold text-sm transition-all duration-150 ${showCorrect ? 'bg-green-100 text-green-700 ring-2 ring-green-400 scale-[1.03]'
-                                            : showWrong ? 'bg-red-100 text-red-700 ring-2 ring-red-400'
-                                                : 'bg-white text-gray-700 shadow-sm border border-gray-100 hover:bg-gray-50 active:scale-95'
+                                        : showWrong ? 'bg-red-100 text-red-700 ring-2 ring-red-400'
+                                            : 'bg-white text-gray-700 shadow-sm border border-gray-100 hover:bg-gray-50 active:scale-95'
                                         }`}
                                 >
                                     {opt.english}

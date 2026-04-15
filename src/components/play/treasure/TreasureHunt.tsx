@@ -4,6 +4,7 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, pickRandom } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 // ==========================================
 // GAME CONFIG
@@ -129,6 +130,7 @@ function TimerBar({ timeLeft, timeLimit }: { timeLeft: number; timeLimit: number
 // MAIN COMPONENT
 // ==========================================
 export default function TreasureHunt() {
+    const sfx = useGameSFX();
     const [phase, setPhase] = useState<'menu' | 'playing' | 'roundComplete' | 'results'>('menu');
     const [round, setRound] = useState(0);
     const [roundData, setRoundData] = useState<RoundData | null>(null);
@@ -192,7 +194,7 @@ export default function TreasureHunt() {
 
         if (item.isTarget) {
             setTapResult('correct');
-            // Play audio
+            sfx.playCorrect();
             if (item.word.audioTotoUrl) {
                 try { new Audio(item.word.audioTotoUrl).play().catch(() => { }); } catch { }
             }
@@ -202,12 +204,13 @@ export default function TreasureHunt() {
             setTimeout(() => handleRoundEnd(true, xp), 1200);
         } else {
             setTapResult('wrong');
+            sfx.playWrong();
             setTimeout(() => {
                 setTappedId(null);
                 setTapResult(null);
             }, 600);
         }
-    }, [roundData, tappedId, timeLeft]);
+    }, [roundData, tappedId, timeLeft, sfx]);
 
     // End round
     const handleRoundEnd = useCallback((correct: boolean, xp: number) => {
@@ -224,6 +227,7 @@ export default function TreasureHunt() {
     const handleNext = useCallback(() => {
         if (round + 1 >= ROUNDS_PER_GAME) {
             setShowConfetti(true);
+            sfx.playVictory();
             setPhase('results');
         } else {
             const nextRound = round + 1;

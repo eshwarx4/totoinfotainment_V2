@@ -4,6 +4,7 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, pickRandom } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 const ROUNDS = 6;
 const GRID_SIZE = 4; // 4 images per round
@@ -22,6 +23,7 @@ function generateRound(): RoundData {
 }
 
 export default function WordFinder() {
+    const sfx = useGameSFX();
     const [phase, setPhase] = useState<'menu' | 'playing' | 'roundDone' | 'results'>('menu');
     const [round, setRound] = useState(0);
     const [roundData, setRoundData] = useState<RoundData | null>(null);
@@ -74,6 +76,7 @@ export default function WordFinder() {
 
         if (word.id === roundData.targetWord.id) {
             setFeedback('correct');
+            sfx.playCorrect();
             if (timerRef.current) clearInterval(timerRef.current);
             const timeBonus = Math.round(timeLeft * 3);
             const streakBonus = streak * 5;
@@ -89,6 +92,7 @@ export default function WordFinder() {
             setTimeout(() => setPhase('roundDone'), 1000);
         } else {
             setFeedback('wrong');
+            sfx.playWrong();
             setStreak(0);
             setTimeout(() => { setSelected(null); setFeedback(null); }, 500);
         }
@@ -181,8 +185,8 @@ export default function WordFinder() {
                                     onClick={() => handleSelect(img)}
                                     disabled={feedback === 'correct'}
                                     className={`relative rounded-2xl overflow-hidden shadow-md transition-all duration-200 aspect-square ${showCorrect ? 'ring-4 ring-green-400 scale-[1.03]'
-                                            : showWrong ? 'ring-4 ring-red-400 animate-shake opacity-70'
-                                                : 'hover:scale-[1.02] active:scale-95 ring-2 ring-gray-100'
+                                        : showWrong ? 'ring-4 ring-red-400 animate-shake opacity-70'
+                                            : 'hover:scale-[1.02] active:scale-95 ring-2 ring-gray-100'
                                         }`}
                                 >
                                     <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />

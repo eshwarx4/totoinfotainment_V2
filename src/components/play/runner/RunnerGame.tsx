@@ -10,8 +10,8 @@ import { useGameSFX } from '@/hooks/useGameSFX';
 // ==========================================
 // CONSTANTS — Subway Surfers style
 // ==========================================
-const GRAVITY = 0.55;
-const JUMP_FORCE = -11;
+const GRAVITY = 0.85;
+const JUMP_FORCE = -10;
 const GROUND_Y_PCT = 0.72;
 const PLAYER_W = 52;
 const PLAYER_H = 72;
@@ -430,11 +430,10 @@ export default function RunnerGame() {
     const jump = useCallback(() => {
         if (!gameRef.current || phase !== 'playing') return;
         const p = gameRef.current.p;
-        if (p.jc < MAX_JUMPS) {
-            p.vy = p.jc === 0 ? JUMP_FORCE : JUMP_FORCE * 0.8;
-            p.jc++;
-            sfxRef.current.playJump();
-        }
+        // Every tap gives upward boost — unlimited jumps
+        p.vy = JUMP_FORCE * 0.85;
+        p.jc++;
+        sfxRef.current.playJump();
     }, [phase]);
 
     const gameLoopRef = useRef<(() => void) | null>(null);

@@ -4,6 +4,7 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, pickRandom } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 const ROUNDS = 6;
 
@@ -14,6 +15,7 @@ function getRoundWords(): WordItem[] {
 }
 
 export default function BlockBuilder() {
+    const sfx = useGameSFX();
     const [phase, setPhase] = useState<'menu' | 'playing' | 'roundDone' | 'results'>('menu');
     const [words, setWords] = useState<WordItem[]>([]);
     const [round, setRound] = useState(0);
@@ -80,6 +82,7 @@ export default function BlockBuilder() {
 
             if (attempt === target) {
                 setIsCorrect(true);
+                sfx.playCorrect();
                 const xp = Math.max(10, 40 - (attempts * 10));
                 setRoundXP(xp);
                 setTotalXP(x => x + xp);
@@ -95,6 +98,7 @@ export default function BlockBuilder() {
                 setTimeout(() => setPhase('roundDone'), 1200);
             } else {
                 // Wrong — shake and reset
+                sfx.playWrong();
                 setTimeout(() => {
                     const letters = currentWord.english.toUpperCase().split('');
                     setScrambled(shuffle([...letters]));
@@ -203,10 +207,10 @@ export default function BlockBuilder() {
                                 key={i}
                                 onClick={() => handleSlotTap(i)}
                                 className={`flex items-center justify-center rounded-lg font-extrabold text-lg transition-all duration-200 border-2 ${letter
-                                        ? isCorrect
-                                            ? 'bg-green-100 border-green-400 text-green-700 scale-105'
-                                            : 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 active:scale-95'
-                                        : 'bg-gray-50 border-dashed border-gray-300 text-gray-300'
+                                    ? isCorrect
+                                        ? 'bg-green-100 border-green-400 text-green-700 scale-105'
+                                        : 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 active:scale-95'
+                                    : 'bg-gray-50 border-dashed border-gray-300 text-gray-300'
                                     }`}
                                 style={{ width: blockSize, height: blockSize }}
                             >
