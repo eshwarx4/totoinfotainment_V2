@@ -64,6 +64,15 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
     if (isCorrect) {
       setCorrect(prev => prev + 1);
       setFeedback('correct');
+      // Play English audio on correct answer
+      if (currentWord.audioEnglish) {
+        try {
+          if (audioRef.current) audioRef.current.pause();
+          const audio = new Audio(currentWord.audioEnglish);
+          audioRef.current = audio;
+          audio.play().catch(() => { });
+        } catch { }
+      }
     } else {
       setFeedback('wrong');
     }

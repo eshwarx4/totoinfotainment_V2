@@ -44,6 +44,7 @@ import BlockBuilder from "./components/play/blocks/BlockBuilder";
 import WordFinder from "./components/play/wordfinder/WordFinder";
 import QuickChallenge from "./components/play/challenge/QuickChallenge";
 import MonkeyArrow from "./components/play/monkey/MonkeyArrow";
+import SpellingLearner from "./components/play/spelling/SpellingLearner";
 
 import NotFound from "./pages/NotFound";
 
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/play/wordfinder" element={<WithFrame><WordFinder /></WithFrame>} />
               <Route path="/play/challenge" element={<WithFrame><QuickChallenge /></WithFrame>} />
               <Route path="/play/monkey" element={<WithFrame><MonkeyArrow /></WithFrame>} />
+              <Route path="/play/spelling" element={<WithFrame><SpellingLearner /></WithFrame>} />
 
               {/* === Legacy redirects === */}
               <Route path="/dashboard" element={<Navigate to="/map" replace />} />

@@ -6,38 +6,47 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 
 let audioCtx: AudioContext | null = null;
 
-function getCtx(): AudioContext {
-    if (!audioCtx || audioCtx.state === 'closed') {
-        audioCtx = new AudioContext();
+function getCtx(): AudioContext | null {
+    try {
+        if (!audioCtx || audioCtx.state === 'closed') {
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => { });
+        }
+        return audioCtx;
+    } catch {
+        return null;
     }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => { });
-    }
-    return audioCtx;
 }
 
 // --- Utility helpers ---
 function playTone(freq: number, duration: number, type: OscillatorType = 'sine', vol = 0.15, detune = 0) {
     try {
         const ctx = getCtx();
+        if (!ctx || ctx.state !== 'running') return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
         osc.detune.value = detune;
         gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + duration);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + duration);
+        osc.stop(ctx.currentTime + duration + 0.05);
+        // Auto-cleanup
+        osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch { } };
     } catch { /* ignore audio errors silently */ }
 }
 
 function playNoise(duration: number, vol = 0.06) {
     try {
         const ctx = getCtx();
-        const bufferSize = ctx.sampleRate * duration;
+        if (!ctx || ctx.state !== 'running') return;
+        const bufferSize = Math.floor(ctx.sampleRate * duration);
+        if (bufferSize <= 0) return;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
@@ -49,26 +58,25 @@ function playNoise(duration: number, vol = 0.06) {
         filter.frequency.value = 1200;
         filter.Q.value = 0.5;
         gain.gain.setValueAtTime(vol, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + duration);
         source.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
         source.start();
-        source.stop(ctx.currentTime + duration);
+        source.stop(ctx.currentTime + duration + 0.05);
+        source.onended = () => { try { source.disconnect(); filter.disconnect(); gain.disconnect(); } catch { } };
     } catch { /* ignore */ }
 }
 
-// --- BGM oscillator refs ---
-let bgmNodes: { oscs: OscillatorNode[]; gain: GainNode } | null = null;
+// --- BGM refs ---
+let bgmNodes: { oscs: OscillatorNode[]; lfos: OscillatorNode[]; gain: GainNode } | null = null;
 
 // ==========================================
 // SFX Functions
 // ==========================================
 
 /** Short UI click */
-export function sfxClick() {
-    playTone(800, 0.06, 'sine', 0.08);
-}
+export function sfxClick() { playTone(800, 0.06, 'sine', 0.08); }
 
 /** Correct answer — ascending happy chime */
 export function sfxCorrect() {
@@ -87,17 +95,19 @@ export function sfxWrong() {
 export function sfxJump() {
     try {
         const ctx = getCtx();
+        if (!ctx || ctx.state !== 'running') return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(250, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+        osc.frequency.linearRampToValueAtTime(600, ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.15);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.15);
+        osc.stop(ctx.currentTime + 0.2);
+        osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch { } };
     } catch { /* ignore */ }
     playNoise(0.08, 0.04);
 }
@@ -153,9 +163,7 @@ export function sfxSnap() {
 }
 
 /** Timer warning tick */
-export function sfxTick() {
-    playTone(660, 0.04, 'sine', 0.07);
-}
+export function sfxTick() { playTone(660, 0.04, 'sine', 0.07); }
 
 /** Streak bonus sparkle */
 export function sfxStreak() {
@@ -169,17 +177,20 @@ export function startBGM() {
     try {
         stopBGM();
         const ctx = getCtx();
+        if (!ctx || ctx.state !== 'running') return;
         const masterGain = ctx.createGain();
         masterGain.gain.value = 0.03;
         masterGain.connect(ctx.destination);
 
         const notes = [261.63, 329.63, 392.00, 349.23]; // C E G F
-        const oscs = notes.map((freq, i) => {
+        const oscs: OscillatorNode[] = [];
+        const lfos: OscillatorNode[] = [];
+
+        notes.forEach((freq, i) => {
             const osc = ctx.createOscillator();
             osc.type = 'sine';
             osc.frequency.value = freq;
             osc.detune.value = (i % 2 === 0 ? 1 : -1) * 3;
-            // Slow LFO modulation for gentle feel
             const lfo = ctx.createOscillator();
             const lfoGain = ctx.createGain();
             lfo.frequency.value = 0.15 + i * 0.05;
@@ -189,18 +200,20 @@ export function startBGM() {
             lfo.start();
             osc.connect(masterGain);
             osc.start();
-            return osc;
+            oscs.push(osc);
+            lfos.push(lfo);
         });
 
-        bgmNodes = { oscs, gain: masterGain };
+        bgmNodes = { oscs, lfos, gain: masterGain };
     } catch { /* ignore */ }
 }
 
-/** Stop BGM */
+/** Stop BGM — properly cleanup all nodes */
 export function stopBGM() {
     if (bgmNodes) {
         try {
-            bgmNodes.oscs.forEach(o => { try { o.stop(); } catch { } });
+            bgmNodes.oscs.forEach(o => { try { o.stop(); o.disconnect(); } catch { } });
+            bgmNodes.lfos.forEach(o => { try { o.stop(); o.disconnect(); } catch { } });
             bgmNodes.gain.disconnect();
         } catch { /* ignore */ }
         bgmNodes = null;

@@ -7,6 +7,7 @@ import { getEmojiImageUrl } from '@/lib/emojiImages';
 import NudgeBar from '@/components/NudgeBar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import { sfxClick, sfxCorrect, sfxWrong } from '@/hooks/useGameSFX';
 import type { WordItem } from '@/data/wordData';
 
 /* ─────────────────────────────────────────────
@@ -116,6 +117,9 @@ function SwipeableWords({
     if (direction === 'right' && currentWord && !learnedWords.includes(currentWord.id)) {
       onMarkLearned(currentWord.id);
       setFeedbackEmoji('+5 ◉');
+      sfxCorrect();
+    } else {
+      sfxWrong();
     }
     setTimeout(() => {
       setCurrentIndex(i => Math.min(i + 1, words.length));

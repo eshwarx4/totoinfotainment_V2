@@ -418,6 +418,11 @@ export default function RunnerGame() {
     const [showConfetti, setShowConfetti] = useState(false);
     const [showTut, setShowTut] = useState(false);
     const [powerLabel, setPowerLabel] = useState('');
+    const [coinCount, setCoinCount] = useState(0);
+    const [highScore, setHighScore] = useState(() => {
+        try { return parseInt(localStorage.getItem('totoRunnerHighScore') || '0', 10); } catch { return 0; }
+    });
+    const [isNewHighScore, setIsNewHighScore] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameRef = useRef<GD | null>(null);
@@ -539,6 +544,17 @@ export default function RunnerGame() {
                     isRunning.current = false;
                     sfxRef.current.playGameOver();
                     sfxRef.current.stopBGM();
+                    setCoinCount(s.coinCt);
+                    // Check high score
+                    setScore(prev => {
+                        const finalScore = prev; // score already set
+                        if (finalScore > highScore) {
+                            setHighScore(finalScore);
+                            setIsNewHighScore(true);
+                            try { localStorage.setItem('totoRunnerHighScore', String(finalScore)); } catch { }
+                        }
+                        return prev;
+                    });
                     setPhase('gameover');
                     return;
                 }
@@ -577,7 +593,7 @@ export default function RunnerGame() {
 
     const initGame = useCallback(() => {
         setCpData(getCPWords()); setCurCP(0); curCPRef.current = 0; setCpCleared(0);
-        setScore(0); setDistance(0); setShowConfetti(false); setPowerLabel('');
+        setScore(0); setDistance(0); setShowConfetti(false); setPowerLabel(''); setCoinCount(0); setIsNewHighScore(false);
         nextCPAt.current = CHECKPOINT_DIST; setPhase('countdown'); sfxRef.current.startBGM();
     }, []);
 
@@ -693,11 +709,20 @@ export default function RunnerGame() {
             <div className="flex flex-col items-center justify-center min-h-[65vh] px-5 text-center animate-fade-in">
                 <Mascot mood="sad" size="md" message="Oops! You tripped! 💫" />
                 <h2 className="text-2xl font-extrabold text-gray-800 mt-4 mb-2">Game Over!</h2>
+                {isNewHighScore && (
+                    <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-2 mb-2 animate-bounce-in">
+                        <span className="text-sm font-extrabold text-amber-600">🏆 New High Score!</span>
+                    </div>
+                )}
                 <div className="bg-white rounded-2xl shadow-lg p-5 w-full max-w-xs mt-2">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         <div className="text-center"><p className="text-2xl font-extrabold text-amber-500">{score}</p><p className="text-xs text-muted-foreground">Score</p></div>
                         <div className="text-center"><p className="text-2xl font-extrabold text-blue-500">{Math.floor(distance)}m</p><p className="text-xs text-muted-foreground">Distance</p></div>
+                        <div className="text-center"><p className="text-2xl font-extrabold text-yellow-500">🪙 {coinCount}</p><p className="text-xs text-muted-foreground">Coins</p></div>
                         <div className="text-center"><p className="text-2xl font-extrabold text-green-500">{cpCleared}/{MAX_CP}</p><p className="text-xs text-muted-foreground">Words</p></div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-xs text-muted-foreground">Best Score: <span className="font-bold text-amber-600">{Math.max(score, highScore)}</span></p>
                     </div>
                 </div>
                 <div className="mt-6 flex gap-3">
@@ -719,6 +744,11 @@ export default function RunnerGame() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="text-center"><p className="text-3xl font-extrabold text-amber-500">{score}</p><p className="text-xs text-muted-foreground">Score</p></div>
                         <div className="text-center"><p className="text-3xl font-extrabold text-blue-500">{Math.floor(distance)}m</p><p className="text-xs text-muted-foreground">Distance</p></div>
+                        <div className="text-center"><p className="text-3xl font-extrabold text-yellow-500">🪙 {coinCount}</p><p className="text-xs text-muted-foreground">Coins</p></div>
+                        <div className="text-center"><p className="text-3xl font-extrabold text-green-500">{cpCleared}/{MAX_CP}</p><p className="text-xs text-muted-foreground">Words</p></div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-xs text-muted-foreground">Best Score: <span className="font-bold text-amber-600">{Math.max(score, highScore)}</span></p>
                     </div>
                 </div>
                 <Mascot mood="happy" size="sm" message="You're a Totopara explorer! ⭐🌿" className="mt-4" />

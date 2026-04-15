@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Volume2, VolumeX, BookOpen, Sparkles } from 'lucide-react';
+import { Send, Volume2, VolumeX, BookOpen, Sparkles, Globe } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // ==========================================
@@ -417,7 +417,7 @@ interface Message {
 }
 
 export default function ChatbotTab() {
-  const { language: appLang } = useLanguage();
+  const { language: appLang, setLanguage } = useLanguage();
   const lang: Lang = appLang === 'bn' ? 'bn' : 'en';
 
   const [messages, setMessages] = useState<Message[]>([
@@ -498,12 +498,23 @@ export default function ChatbotTab() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => { setTtsEnabled(e => !e); stopSpeaking(); }}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${ttsEnabled ? 'bg-white/20 text-white' : 'bg-white/10 text-white/50'}`}
-          >
-            {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Language toggle */}
+            <button
+              onClick={() => { setLanguage(lang === 'en' ? 'bn' : 'en'); stopSpeaking(); }}
+              className="h-8 px-2.5 rounded-full bg-white/20 flex items-center gap-1.5 text-white text-[11px] font-bold transition-all active:scale-90 hover:bg-white/30"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {lang === 'en' ? 'বাং' : 'EN'}
+            </button>
+            {/* TTS toggle */}
+            <button
+              onClick={() => { setTtsEnabled(e => !e); stopSpeaking(); }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${ttsEnabled ? 'bg-white/20 text-white' : 'bg-white/10 text-white/50'}`}
+            >
+              {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </div>
 

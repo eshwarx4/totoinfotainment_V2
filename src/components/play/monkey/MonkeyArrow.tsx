@@ -18,6 +18,7 @@ interface GameWord {
     english: string;
     imageUrl: string;
     audioTotoUrl: string;
+    audioEnglishUrl: string;
 }
 
 interface Target {
@@ -51,13 +52,13 @@ function shuffle<T>(arr: T[]): T[] {
     return a;
 }
 
-// Convert WordItem to GameWord
 function toGameWord(w: WordItem): GameWord {
     return {
         id: w.id,
         english: w.english,
         imageUrl: w.imageUrl,
-        audioTotoUrl: w.audioTotoUrl
+        audioTotoUrl: w.audioTotoUrl,
+        audioEnglishUrl: w.audioEnglishUrl,
     };
 }
 
@@ -102,6 +103,7 @@ export default function MonkeyArrow() {
     const hitEffectRef = useRef<{ x: number; y: number; frame: number; correct: boolean } | null>(null);
 
     const allWordsRef = useRef<GameWord[]>(getUsableWords());
+    const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
     // Generate rounds from local data
     const generateRounds = useCallback((): RoundData[] => {
@@ -148,6 +150,15 @@ export default function MonkeyArrow() {
         hitEffectRef.current = null;
         setPhase('playing');
         sfx.startBGM();
+        // Preload images for all rounds
+        r.forEach(rd => {
+            rd.options.forEach(opt => {
+                if (opt.imageUrl && !imgCacheRef.current.has(opt.id)) {
+                    const img = new Image(); img.crossOrigin = 'anonymous'; img.src = opt.imageUrl;
+                    imgCacheRef.current.set(opt.id, img);
+                }
+            });
+        });
     }, [tutorial.shouldShow, generateRounds, sfx]);
 
     const finishTutorial = useCallback(() => {
@@ -258,16 +269,16 @@ export default function MonkeyArrow() {
         dimsRef.current = { w, h };
 
         const bowX = 80;
-        const bowY = h * 0.7;
+        const bowY = h * 0.8;
 
         // Spawn targets
         if (phase === 'playing' && rounds[currentRound]) {
             spawnTargets(rounds[currentRound], w, h);
         } else if (phase === 'tutorial') {
             const demoWords: GameWord[] = [
-                { id: '1', english: 'Apple', imageUrl: '', audioTotoUrl: '' },
-                { id: '2', english: 'Bird', imageUrl: '', audioTotoUrl: '' },
-                { id: '3', english: 'Cat', imageUrl: '', audioTotoUrl: '' },
+                { id: '1', english: 'Apple', imageUrl: '', audioTotoUrl: '', audioEnglishUrl: '' },
+                { id: '2', english: 'Bird', imageUrl: '', audioTotoUrl: '', audioEnglishUrl: '' },
+                { id: '3', english: 'Cat', imageUrl: '', audioTotoUrl: '', audioEnglishUrl: '' },
             ];
             targetsRef.current = [
                 { x: w * 0.50, y: h * 0.18, word: demoWords[0], isCorrect: false, hit: false },
@@ -351,7 +362,7 @@ export default function MonkeyArrow() {
 
             // Ground
             ctx.fillStyle = '#33691E';
-            ctx.fillRect(0, h * 0.68, w, h * 0.32);
+            ctx.fillRect(0, h * 0.78, w, h * 0.22);
 
             // Grass
             ctx.strokeStyle = '#4CAF50';
@@ -359,8 +370,8 @@ export default function MonkeyArrow() {
             for (let i = 0; i < w; i += 20) {
                 const sway = Math.sin(f * 0.03 + i * 0.1) * 3;
                 ctx.beginPath();
-                ctx.moveTo(i, h * 0.68);
-                ctx.lineTo(i + sway, h * 0.68 - 15);
+                ctx.moveTo(i, h * 0.78);
+                ctx.lineTo(i + sway, h * 0.78 - 15);
                 ctx.stroke();
             }
 
@@ -369,11 +380,11 @@ export default function MonkeyArrow() {
             for (let i = 0; i < w; i += 50) {
                 ctx.fillStyle = flowerColors[i % 4];
                 ctx.beginPath();
-                ctx.arc(i + 25, h * 0.69, 5, 0, Math.PI * 2);
+                ctx.arc(i + 25, h * 0.79, 5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#FFC107';
                 ctx.beginPath();
-                ctx.arc(i + 25, h * 0.69, 2, 0, Math.PI * 2);
+                ctx.arc(i + 25, h * 0.79, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -412,7 +423,7 @@ export default function MonkeyArrow() {
                 ctx.roundRect(-50, -28, 100, 50, 8);
                 ctx.stroke();
 
-                // Word
+                // Word text
                 ctx.fillStyle = '#3E2723';
                 ctx.font = 'bold 18px Nunito, sans-serif';
                 ctx.textAlign = 'center';
@@ -444,8 +455,9 @@ export default function MonkeyArrow() {
                             sfx.playCorrect();
                             setScore(s => s + 100);
                             setCorrectCount(c => c + 1);
-                            if (t.word.audioTotoUrl) {
-                                new Audio(t.word.audioTotoUrl).play().catch(() => {});
+                            // Play English audio on correct hit
+                            if (t.word.audioEnglishUrl) {
+                                try { new Audio(t.word.audioEnglishUrl).play().catch(() => { }); } catch { }
                             }
 
                             if (phase === 'tutorial') {
@@ -743,10 +755,15 @@ export default function MonkeyArrow() {
         return () => cancelAnimationFrame(animRef.current);
     }, [phase, currentRound, rounds, tutorialStep, spawnTargets, sfx]);
 
-    // Update targets when round changes
+    // Update targets when round changes + play Toto audio
     useEffect(() => {
         if (phase === 'playing' && rounds[currentRound]) {
             spawnTargets(rounds[currentRound], dimsRef.current.w, dimsRef.current.h);
+            // Play Toto audio for the question word
+            const q = rounds[currentRound].question;
+            if (q.audioTotoUrl) {
+                try { new Audio(q.audioTotoUrl).play().catch(() => { }); } catch { }
+            }
         }
     }, [currentRound, phase, rounds, spawnTargets]);
 
@@ -845,17 +862,30 @@ export default function MonkeyArrow() {
     const round = rounds[currentRound];
     return (
         <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
-            <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)' }}>
-                {/* Question bar */}
-                <div className="flex items-center justify-between px-3 py-2 bg-white/90 backdrop-blur-sm shrink-0 border-b border-gray-100 shadow-sm">
-                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">🪙 {score}</span>
-                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">
-                        {round?.question.imageUrl && (
-                            <img src={round.question.imageUrl} alt="" className="w-8 h-8 rounded-lg object-cover" />
+            <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+                {/* Top bar — Big question image + Score + progress */}
+                <div className="flex items-center justify-between px-3 py-2 bg-white/95 backdrop-blur-sm shrink-0 border-b border-gray-100 gap-2">
+                    {/* Question: BIG image, highlighted green border */}
+                    <div className="shrink-0 rounded-2xl p-1" style={{ background: 'linear-gradient(135deg, #4CAF50, #81C784)', boxShadow: '0 0 12px rgba(76,175,80,0.4)' }}>
+                        {round?.question.imageUrl ? (
+                            <img
+                                src={round.question.imageUrl}
+                                alt=""
+                                className="w-14 h-14 rounded-xl object-cover bg-white"
+                                onClick={() => {
+                                    if (round?.question.audioTotoUrl) {
+                                        try { new Audio(round.question.audioTotoUrl).play().catch(() => { }); } catch { }
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <div className="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center text-xl font-bold text-green-800">?</div>
                         )}
-                        <span className="text-sm font-bold text-green-800">Find: {round?.question.english}</span>
                     </div>
-                    <div className="flex items-center gap-0.5">
+                    {/* Score */}
+                    <span className="text-sm font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full shrink-0">🪙 {score}</span>
+                    {/* Progress dots */}
+                    <div className="flex items-center gap-1 shrink-0">
                         {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => (
                             <div key={i} className={`w-2.5 h-2.5 rounded-full ${i < correctCount ? 'bg-green-500' : i === currentRound ? 'bg-amber-400 animate-pulse' : 'bg-gray-200'}`} />
                         ))}
@@ -864,7 +894,7 @@ export default function MonkeyArrow() {
 
                 {/* Canvas */}
                 <div
-                    className="flex-1 relative overflow-hidden"
+                    className="flex-1 min-h-0 relative overflow-hidden"
                     onMouseDown={onPointerDown}
                     onMouseMove={onPointerMove}
                     onMouseUp={onPointerUp}
