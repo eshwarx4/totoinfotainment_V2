@@ -9,7 +9,7 @@ interface LanguageSelectorProps {
 
 const languages: { code: Language; name: string; nativeName: string; flag: string }[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
 ];
 
 export function LanguageSelector({ variant = 'card', showTitle = true, onSelect }: LanguageSelectorProps) {
