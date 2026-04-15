@@ -4,15 +4,24 @@ import { ALL_WORDS, WordItem } from '@/data/wordData';
 import { shuffle, generateOptions } from '@/lib/gameUtils';
 import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
+import GameTutorial, { useTutorial } from '@/components/play/GameTutorial';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 // ==========================================
 // GAME CONSTANTS
 // ==========================================
 const TOTAL_ROUNDS = 8;
-const GRAVITY = 0.35;
-const ARROW_POWER = 0.18;
-const TARGET_W = 80;
-const TARGET_H = 34;
+const GRAVITY = 0.25;
+const ARROW_SPEED = 18;
+const TARGET_SIZE = 70;
+
+const TUTORIAL_STEPS = [
+    { emoji: '🏹', title: 'Forest Archer!', description: 'You are an archer in the forest. Shoot arrows at word targets!' },
+    { emoji: '🎯', title: 'Find the Target', description: 'Look for the wooden sign with the correct Toto word matching the English word shown.' },
+    { emoji: '👆', title: 'Aim & Shoot', description: 'Tap and drag to aim. The dotted line shows your arrow path. Release to shoot!' },
+    { emoji: '🌲', title: 'Hit the Right One', description: 'Only one target has the correct answer. Hit it to score points!' },
+    { emoji: '⭐', title: 'Master the Forest', description: 'Complete all rounds to become a Forest Archer Master!' },
+];
 
 interface Target {
     x: number;
@@ -20,7 +29,8 @@ interface Target {
     word: WordItem;
     isCorrect: boolean;
     hit: boolean;
-    wobble: number;
+    scale: number;
+    speed: number;
 }
 
 interface ArrowState {
@@ -30,454 +40,465 @@ interface ArrowState {
     vy: number;
     rotation: number;
     active: boolean;
-    trail: { x: number; y: number }[];
-    hitTarget: number | null;
+    trail: { x: number; y: number; alpha: number }[];
 }
 
-interface DragState {
-    dragging: boolean;
-    startX: number;
+interface AimState {
+    aiming: boolean;
+    angle: number;
+    power: number;
     startY: number;
-    currentX: number;
-    currentY: number;
 }
 
 interface RoundData {
     question: WordItem;
-    targets: Target[];
+    options: WordItem[];
+}
+
+// Pre-generate tree positions for consistent forest
+const TREES: { x: number; y: number; scale: number; layer: number }[] = [];
+for (let i = 0; i < 12; i++) {
+    TREES.push({
+        x: Math.random() * 100,
+        y: 30 + Math.random() * 25,
+        scale: 0.4 + Math.random() * 0.3,
+        layer: 0
+    });
+}
+for (let i = 0; i < 8; i++) {
+    TREES.push({
+        x: Math.random() * 100,
+        y: 50 + Math.random() * 20,
+        scale: 0.6 + Math.random() * 0.4,
+        layer: 1
+    });
 }
 
 function getRounds(): RoundData[] {
     const usable = ALL_WORDS.filter(w => w.imageUrl && w.imageUrl.trim() !== '');
     const words = shuffle(usable).slice(0, TOTAL_ROUNDS);
-    return words.map(w => {
-        const options = generateOptions(w, usable, 4);
-        // Place targets at right side, vertically spread
-        const targets: Target[] = options.map((opt, i) => ({
-            x: 280 + (i % 2) * 50,
-            y: 80 + i * 80,
-            word: opt,
-            isCorrect: opt.id === w.id,
-            hit: false,
-            wobble: Math.random() * Math.PI * 2,
-        }));
-        return { question: w, targets };
-    });
+    return words.map(w => ({
+        question: w,
+        options: generateOptions(w, usable, 3)
+    }));
 }
 
 // ==========================================
 // DRAWING FUNCTIONS
 // ==========================================
 
-function drawSky(ctx: CanvasRenderingContext2D, w: number, h: number) {
-    const sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, '#5DADE2');
-    sky.addColorStop(0.4, '#85C1E9');
-    sky.addColorStop(0.7, '#AED6F1');
-    sky.addColorStop(1, '#A9DFBF');
+function drawForestBackground(ctx: CanvasRenderingContext2D, w: number, h: number, frame: number) {
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.7);
+    sky.addColorStop(0, '#87CEEB');
+    sky.addColorStop(0.3, '#98D8C8');
+    sky.addColorStop(0.6, '#7CB342');
+    sky.addColorStop(1, '#558B2F');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // Clouds
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    [[80, 35, 28], [220, 20, 22], [340, 45, 18]].forEach(([cx, cy, r]) => {
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, r, r * 0.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(cx + r * 0.5, cy - r * 0.25, r * 0.65, r * 0.35, 0, 0, Math.PI * 2);
-        ctx.fill();
+    // Sun
+    const sunGlow = ctx.createRadialGradient(w * 0.85, h * 0.12, 0, w * 0.85, h * 0.12, 60);
+    sunGlow.addColorStop(0, 'rgba(255, 244, 157, 1)');
+    sunGlow.addColorStop(0.3, 'rgba(255, 236, 117, 0.8)');
+    sunGlow.addColorStop(0.7, 'rgba(255, 241, 118, 0.2)');
+    sunGlow.addColorStop(1, 'rgba(255, 241, 118, 0)');
+    ctx.fillStyle = sunGlow;
+    ctx.fillRect(w * 0.6, 0, w * 0.4, h * 0.3);
+
+    ctx.fillStyle = '#FFF59D';
+    ctx.beginPath();
+    ctx.arc(w * 0.85, h * 0.12, 25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant mountains
+    ctx.fillStyle = '#81C784';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.35);
+    ctx.lineTo(w * 0.15, h * 0.22);
+    ctx.lineTo(w * 0.3, h * 0.32);
+    ctx.lineTo(w * 0.5, h * 0.18);
+    ctx.lineTo(w * 0.7, h * 0.28);
+    ctx.lineTo(w * 0.85, h * 0.2);
+    ctx.lineTo(w, h * 0.3);
+    ctx.lineTo(w, h * 0.4);
+    ctx.lineTo(0, h * 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw back layer trees
+    TREES.filter(t => t.layer === 0).forEach(tree => {
+        drawTree(ctx, (tree.x / 100) * w, (tree.y / 100) * h, tree.scale * 80, frame, 0.6);
     });
-}
 
-function drawGround(ctx: CanvasRenderingContext2D, w: number, h: number) {
-    const gy = h * 0.82;
-    // Grass
-    const grd = ctx.createLinearGradient(0, gy, 0, h);
-    grd.addColorStop(0, '#27AE60');
-    grd.addColorStop(0.15, '#229954');
-    grd.addColorStop(0.5, '#1E8449');
-    grd.addColorStop(1, '#196F3D');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, gy, w, h - gy);
+    // Mid forest layer
+    ctx.fillStyle = '#4CAF50';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.45);
+    for (let i = 0; i <= w; i += 30) {
+        ctx.lineTo(i, h * 0.42 + Math.sin(i * 0.02 + frame * 0.01) * 5);
+    }
+    ctx.lineTo(w, h * 0.55);
+    ctx.lineTo(0, h * 0.55);
+    ctx.closePath();
+    ctx.fill();
 
-    // Grass tufts
-    ctx.strokeStyle = '#2ECC71';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 20; i++) {
-        const gx = (i * 22) % w;
+    // Draw front layer trees
+    TREES.filter(t => t.layer === 1).forEach(tree => {
+        drawTree(ctx, (tree.x / 100) * w, (tree.y / 100) * h, tree.scale * 100, frame, 1);
+    });
+
+    // Ground
+    const ground = ctx.createLinearGradient(0, h * 0.7, 0, h);
+    ground.addColorStop(0, '#33691E');
+    ground.addColorStop(0.3, '#2E7D32');
+    ground.addColorStop(1, '#1B5E20');
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, h * 0.7, w, h * 0.3);
+
+    // Grass blades at bottom
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < w; i += 15) {
+        const sway = Math.sin(frame * 0.03 + i * 0.1) * 3;
         ctx.beginPath();
-        ctx.moveTo(gx, gy);
-        ctx.lineTo(gx - 2, gy - 5);
-        ctx.moveTo(gx, gy);
-        ctx.lineTo(gx + 3, gy - 7);
+        ctx.moveTo(i, h * 0.7);
+        ctx.quadraticCurveTo(i + sway, h * 0.7 - 15, i + sway * 1.5, h * 0.7 - 25);
         ctx.stroke();
+    }
+
+    // Foreground grass tufts
+    ctx.fillStyle = '#388E3C';
+    for (let i = 0; i < w; i += 40) {
+        const sway = Math.sin(frame * 0.02 + i * 0.05) * 2;
+        ctx.beginPath();
+        ctx.moveTo(i, h * 0.7);
+        ctx.quadraticCurveTo(i + 10 + sway, h * 0.7 - 20, i + 5, h * 0.7);
+        ctx.quadraticCurveTo(i + 15 + sway, h * 0.7 - 25, i + 12, h * 0.7);
+        ctx.quadraticCurveTo(i + 22 + sway, h * 0.7 - 18, i + 20, h * 0.7);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 
-function drawMonkey(ctx: CanvasRenderingContext2D, mx: number, my: number, frame: number, isDragging: boolean) {
-    const bob = isDragging ? 0 : Math.sin(frame * 0.04) * 2;
-    const y = my + bob;
+function drawTree(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, frame: number, alpha: number) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    const sway = Math.sin(frame * 0.015 + x * 0.01) * 2;
+
+    // Trunk
+    ctx.fillStyle = '#5D4037';
+    ctx.fillRect(x - size * 0.08, y, size * 0.16, size * 0.5);
+
+    // Foliage layers
+    const colors = ['#2E7D32', '#388E3C', '#43A047'];
+    for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        const layerY = y - size * 0.2 * i;
+        const layerSize = size * (0.5 - i * 0.1);
+        ctx.moveTo(x + sway, layerY - layerSize);
+        ctx.lineTo(x - layerSize * 0.8 + sway * 0.5, layerY);
+        ctx.lineTo(x + layerSize * 0.8 + sway * 0.5, layerY);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawTarget(ctx: CanvasRenderingContext2D, target: Target, frame: number) {
+    if (target.hit) return;
+
+    const { x, y, word, scale } = target;
+    const size = TARGET_SIZE * scale;
+    const wobble = Math.sin(frame * 0.05 + x * 0.01) * 3;
 
     ctx.save();
+    ctx.translate(x, y + wobble);
+
+    // Wooden post
+    ctx.fillStyle = '#6D4C41';
+    ctx.fillRect(-4, 0, 8, size * 0.6);
 
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 5;
+
+    // Main board
+    const boardGrad = ctx.createLinearGradient(-size * 0.6, -size * 0.4, size * 0.6, size * 0.4);
+    boardGrad.addColorStop(0, '#FFF8E1');
+    boardGrad.addColorStop(0.5, '#FFECB3');
+    boardGrad.addColorStop(1, '#FFE082');
+    ctx.fillStyle = boardGrad;
     ctx.beginPath();
-    ctx.ellipse(mx, my + 35, 22, 6, 0, 0, Math.PI * 2);
+    ctx.roundRect(-size * 0.6, -size * 0.5, size * 1.2, size * 0.8, 8);
     ctx.fill();
 
-    // Tail - long curled tail
-    ctx.strokeStyle = '#7B5B3A';
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(mx - 14, y + 15);
-    ctx.bezierCurveTo(mx - 35, y + 5, mx - 40, y - 20, mx - 25, y - 30);
-    ctx.stroke();
-    ctx.strokeStyle = '#9B7B5B';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // Feet
-    ctx.fillStyle = '#6D4C41';
-    ctx.beginPath();
-    ctx.ellipse(mx - 10, y + 32, 6, 4, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(mx + 10, y + 32, 6, 4, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body
-    ctx.fillStyle = '#8D6E63';
-    ctx.beginPath();
-    ctx.ellipse(mx, y + 12, 18, 22, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Belly
-    ctx.fillStyle = '#EFEBE9';
-    ctx.beginPath();
-    ctx.ellipse(mx + 1, y + 15, 11, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Left arm (holding bow)
+    // Board border
+    ctx.shadowColor = 'transparent';
     ctx.strokeStyle = '#8D6E63';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-size * 0.6, -size * 0.5, size * 1.2, size * 0.8, 8);
+    ctx.stroke();
+
+    // Corner decorations
+    ctx.fillStyle = '#A1887F';
+    [[-size * 0.5, -size * 0.4], [size * 0.5, -size * 0.4], [-size * 0.5, size * 0.2], [size * 0.5, size * 0.2]].forEach(([cx, cy]) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Word text
+    ctx.fillStyle = '#3E2723';
+    ctx.font = `bold ${Math.round(size * 0.22)}px Nunito, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(word.toto || word.english, 0, -size * 0.1);
+
+    // English subtitle (smaller)
+    if (word.toto && word.toto !== word.english) {
+        ctx.fillStyle = '#6D4C41';
+        ctx.font = `${Math.round(size * 0.14)}px Nunito, system-ui, sans-serif`;
+        ctx.fillText(`(${word.english})`, 0, size * 0.15);
+    }
+
+    ctx.restore();
+}
+
+function drawBowAndHands(ctx: CanvasRenderingContext2D, w: number, h: number, aim: AimState, frame: number) {
+    ctx.save();
+
+    const bowX = w * 0.15;
+    const bowY = h * 0.85;
+    const bowSize = Math.min(w, h) * 0.25;
+
+    // Left hand (holding bow)
+    ctx.fillStyle = '#FFCC80';
+    ctx.beginPath();
+    ctx.ellipse(bowX - bowSize * 0.15, bowY - bowSize * 0.1, 18, 22, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fingers wrapped around bow
+    ctx.fillStyle = '#FFB74D';
+    for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.ellipse(bowX - bowSize * 0.05, bowY - bowSize * 0.2 + i * 12, 6, 10, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Bow
+    ctx.save();
+    ctx.translate(bowX, bowY - bowSize * 0.3);
+    ctx.rotate(-0.1);
+
+    // Bow wood
+    ctx.strokeStyle = '#5D4037';
+    ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(mx + 16, y + 4);
-    ctx.lineTo(mx + 32, y - 6);
+    ctx.arc(0, 0, bowSize * 0.4, -Math.PI * 0.4, Math.PI * 0.4);
     ctx.stroke();
 
-    // Hand
-    ctx.fillStyle = '#6D4C41';
-    ctx.beginPath();
-    ctx.arc(mx + 33, y - 7, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // BOW - proper wooden bow
-    ctx.save();
-    ctx.translate(mx + 36, y - 6);
-
-    // Bow limbs (wooden)
-    ctx.strokeStyle = '#5D4037';
+    // Bow detail
+    ctx.strokeStyle = '#795548';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(0, 0, 22, -0.75 * Math.PI, 0.75 * Math.PI);
+    ctx.arc(0, 0, bowSize * 0.4, -Math.PI * 0.4, Math.PI * 0.4);
     ctx.stroke();
 
-    // Bow wood grain
-    ctx.strokeStyle = '#795548';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 22, -0.75 * Math.PI, 0.75 * Math.PI);
-    ctx.stroke();
-
-    // Bow tips (notches)
-    const tipAngleTop = -0.75 * Math.PI;
-    const tipAngleBot = 0.75 * Math.PI;
+    // Bow tips
     ctx.fillStyle = '#3E2723';
+    const topAngle = -Math.PI * 0.4;
+    const botAngle = Math.PI * 0.4;
     ctx.beginPath();
-    ctx.arc(22 * Math.cos(tipAngleTop), 22 * Math.sin(tipAngleTop), 2.5, 0, Math.PI * 2);
+    ctx.arc(Math.cos(topAngle) * bowSize * 0.4, Math.sin(topAngle) * bowSize * 0.4, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(22 * Math.cos(tipAngleBot), 22 * Math.sin(tipAngleBot), 2.5, 0, Math.PI * 2);
+    ctx.arc(Math.cos(botAngle) * bowSize * 0.4, Math.sin(botAngle) * bowSize * 0.4, 5, 0, Math.PI * 2);
     ctx.fill();
 
     // Bowstring
-    ctx.strokeStyle = '#D7CCC8';
-    ctx.lineWidth = 1.5;
+    const stringTopX = Math.cos(topAngle) * bowSize * 0.4;
+    const stringTopY = Math.sin(topAngle) * bowSize * 0.4;
+    const stringBotX = Math.cos(botAngle) * bowSize * 0.4;
+    const stringBotY = Math.sin(botAngle) * bowSize * 0.4;
+
+    ctx.strokeStyle = '#E0E0E0';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    const topX = 22 * Math.cos(tipAngleTop);
-    const topY = 22 * Math.sin(tipAngleTop);
-    const botX = 22 * Math.cos(tipAngleBot);
-    const botY = 22 * Math.sin(tipAngleBot);
-    if (isDragging) {
-        // Pulled back bowstring
-        ctx.moveTo(topX, topY);
-        ctx.lineTo(-8, 0);
-        ctx.lineTo(botX, botY);
+    if (aim.aiming) {
+        const pullBack = aim.power * 0.3;
+        ctx.moveTo(stringTopX, stringTopY);
+        ctx.lineTo(-pullBack, 0);
+        ctx.lineTo(stringBotX, stringBotY);
     } else {
-        ctx.moveTo(topX, topY);
-        ctx.lineTo(botX, botY);
+        ctx.moveTo(stringTopX, stringTopY);
+        ctx.lineTo(stringBotX, stringBotY);
     }
     ctx.stroke();
 
-    // Arrow nocked on bowstring when ready
-    if (!isDragging) {
-        // Arrow shaft
+    // Arrow on bow
+    if (!aim.aiming) {
+        // Resting arrow
         ctx.fillStyle = '#8D6E63';
-        ctx.fillRect(-6, -1.5, 26, 3);
-        // Arrow head
-        ctx.fillStyle = '#B71C1C';
+        ctx.fillRect(0, -2, bowSize * 0.5, 4);
+        ctx.fillStyle = '#C62828';
         ctx.beginPath();
-        ctx.moveTo(22, 0);
-        ctx.lineTo(16, -4);
-        ctx.lineTo(16, 4);
+        ctx.moveTo(bowSize * 0.5, 0);
+        ctx.lineTo(bowSize * 0.42, -6);
+        ctx.lineTo(bowSize * 0.42, 6);
+        ctx.closePath();
+        ctx.fill();
+    } else {
+        // Drawn arrow
+        const pullBack = aim.power * 0.3;
+        ctx.save();
+        ctx.translate(-pullBack, 0);
+        ctx.rotate(aim.angle);
+
+        ctx.fillStyle = '#8D6E63';
+        ctx.fillRect(-5, -2, bowSize * 0.5, 4);
+        ctx.fillStyle = '#C62828';
+        ctx.beginPath();
+        ctx.moveTo(bowSize * 0.45, 0);
+        ctx.lineTo(bowSize * 0.37, -6);
+        ctx.lineTo(bowSize * 0.37, 6);
         ctx.closePath();
         ctx.fill();
         // Fletching
-        ctx.fillStyle = '#FF8F00';
+        ctx.fillStyle = '#FF6F00';
         ctx.beginPath();
-        ctx.moveTo(-6, 0);
-        ctx.lineTo(-12, -4);
-        ctx.lineTo(-4, 0);
-        ctx.lineTo(-12, 4);
+        ctx.moveTo(-5, 0);
+        ctx.lineTo(-15, -8);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(-15, 8);
         ctx.closePath();
         ctx.fill();
-    }
-
-    ctx.restore();
-
-    // Right arm
-    ctx.strokeStyle = '#8D6E63';
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(mx - 16, y + 6);
-    ctx.lineTo(mx - 24, y + 18);
-    ctx.stroke();
-
-    // Head
-    ctx.fillStyle = '#8D6E63';
-    ctx.beginPath();
-    ctx.arc(mx, y - 14, 16, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Face plate
-    ctx.fillStyle = '#EFEBE9';
-    ctx.beginPath();
-    ctx.ellipse(mx + 1, y - 11, 11, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ears
-    [[-16, -18], [16, -18]].forEach(([ex, ey]) => {
-        ctx.fillStyle = '#7B5B3A';
-        ctx.beginPath();
-        ctx.arc(mx + ex, y + ey, 7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#FFAB91';
-        ctx.beginPath();
-        ctx.arc(mx + ex, y + ey, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-    });
-
-    // Eyes
-    ctx.fillStyle = '#2C2C2C';
-    ctx.beginPath();
-    ctx.ellipse(mx - 5, y - 16, 3, 3.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(mx + 7, y - 16, 3, 3.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eye shine
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(mx - 4, y - 17.5, 1.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(mx + 8, y - 17.5, 1.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Nose
-    ctx.fillStyle = '#6D4C41';
-    ctx.beginPath();
-    ctx.ellipse(mx + 1, y - 11, 3, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Smile
-    ctx.strokeStyle = '#5D4037';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(mx + 1, y - 7, 5, 0.15 * Math.PI, 0.85 * Math.PI);
-    ctx.stroke();
-
-    ctx.restore();
-}
-
-function drawTargets(ctx: CanvasRenderingContext2D, targets: Target[], frame: number) {
-    for (const t of targets) {
-        if (t.hit) continue;
-        const wobbleY = Math.sin(frame * 0.025 + t.wobble) * 4;
-        const tx = t.x;
-        const ty = t.y + wobbleY;
-
-        ctx.save();
-
-        // Post
-        ctx.fillStyle = '#795548';
-        ctx.fillRect(tx + TARGET_W / 2 - 3, ty + TARGET_H / 2, 6, 30);
-
-        // Board shadow
-        ctx.shadowColor = 'rgba(0,0,0,0.2)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 4;
-
-        // Wooden board
-        const boardGrd = ctx.createLinearGradient(tx, ty, tx, ty + TARGET_H);
-        boardGrd.addColorStop(0, '#FFF8E1');
-        boardGrd.addColorStop(0.5, '#FFF3E0');
-        boardGrd.addColorStop(1, '#FFE0B2');
-        ctx.fillStyle = boardGrd;
-        ctx.beginPath();
-        ctx.roundRect(tx, ty, TARGET_W, TARGET_H, 6);
-        ctx.fill();
-
-        // Board border
-        ctx.shadowColor = 'transparent';
-        ctx.strokeStyle = '#8D6E63';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(tx, ty, TARGET_W, TARGET_H, 6);
-        ctx.stroke();
-
-        // Inner border
-        ctx.strokeStyle = '#A1887F';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(tx + 3, ty + 3, TARGET_W - 6, TARGET_H - 6, 4);
-        ctx.stroke();
 
         ctx.restore();
-
-        // Word text
-        ctx.fillStyle = '#3E2723';
-        ctx.font = 'bold 14px Nunito, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(t.word.english, tx + TARGET_W / 2, ty + TARGET_H / 2);
     }
+
+    ctx.restore();
+
+    // Right hand (pulling string)
+    if (aim.aiming) {
+        const pullBack = aim.power * 0.3;
+        ctx.fillStyle = '#FFCC80';
+        ctx.beginPath();
+        ctx.ellipse(bowX - pullBack - 10, bowY - bowSize * 0.3, 15, 18, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fingers on string
+        ctx.fillStyle = '#FFB74D';
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.ellipse(bowX - pullBack - 5, bowY - bowSize * 0.35 + i * 10, 5, 8, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    ctx.restore();
 }
 
-function drawTrajectory(ctx: CanvasRenderingContext2D, startX: number, startY: number, vx: number, vy: number) {
+function drawTrajectory(ctx: CanvasRenderingContext2D, startX: number, startY: number, angle: number, power: number) {
     ctx.save();
-    ctx.setLineDash([6, 8]);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
     ctx.beginPath();
+
+    const vx = Math.cos(angle) * power * 0.3;
+    const vy = Math.sin(angle) * power * 0.3;
 
     let px = startX, py = startY;
     let cvx = vx, cvy = vy;
     ctx.moveTo(px, py);
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 50; i++) {
         px += cvx;
         py += cvy;
-        cvy += GRAVITY;
-        if (py > 500) break;
+        cvy += GRAVITY * 0.5;
+        if (py > startY + 100 || px > startX + 400) break;
         ctx.lineTo(px, py);
     }
     ctx.stroke();
 
     // Crosshair at end
     ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(px, py, 8, 0, Math.PI * 2);
+    ctx.arc(px, py, 12, 0, Math.PI * 2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(px - 12, py);
-    ctx.lineTo(px + 12, py);
-    ctx.moveTo(px, py - 12);
-    ctx.lineTo(px, py + 12);
+    ctx.moveTo(px - 18, py);
+    ctx.lineTo(px + 18, py);
+    ctx.moveTo(px, py - 18);
+    ctx.lineTo(px, py + 18);
     ctx.stroke();
 
     ctx.restore();
 }
 
 function drawArrow(ctx: CanvasRenderingContext2D, arrow: ArrowState) {
-    if (!arrow.active && arrow.hitTarget === null) return;
+    if (!arrow.active) return;
 
     ctx.save();
 
-    // Trail
-    if (arrow.trail.length > 2) {
-        ctx.strokeStyle = 'rgba(255, 152, 0, 0.25)';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
+    // Motion blur trail
+    arrow.trail.forEach((point, i) => {
+        ctx.fillStyle = `rgba(255, 152, 0, ${point.alpha * 0.3})`;
         ctx.beginPath();
-        arrow.trail.forEach((p, i) => {
-            if (i === 0) ctx.moveTo(p.x, p.y);
-            else ctx.lineTo(p.x, p.y);
-        });
-        ctx.stroke();
+        ctx.arc(point.x, point.y, 3 - i * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+    });
 
-        // Sparkle dots along trail
-        ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
-        arrow.trail.forEach((p, i) => {
-            if (i % 3 === 0) {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        });
-    }
-
-    // Arrow body
     ctx.translate(arrow.x, arrow.y);
     ctx.rotate(arrow.rotation);
 
-    // Shaft
+    // Arrow shaft
     ctx.fillStyle = '#8D6E63';
-    ctx.fillRect(-20, -2, 32, 4);
-
-    // Shaft wood grain
+    ctx.fillRect(-25, -2.5, 40, 5);
     ctx.fillStyle = '#A1887F';
-    ctx.fillRect(-15, -1, 20, 2);
+    ctx.fillRect(-20, -1.5, 30, 3);
 
-    // Arrow head (metal)
+    // Arrow head
     ctx.fillStyle = '#B71C1C';
     ctx.beginPath();
-    ctx.moveTo(14, 0);
-    ctx.lineTo(6, -6);
-    ctx.lineTo(8, 0);
-    ctx.lineTo(6, 6);
-    ctx.closePath();
-    ctx.fill();
-    // Metallic shine
-    ctx.fillStyle = '#EF5350';
-    ctx.beginPath();
-    ctx.moveTo(13, -1);
-    ctx.lineTo(9, -4);
+    ctx.moveTo(18, 0);
+    ctx.lineTo(8, -8);
     ctx.lineTo(10, 0);
+    ctx.lineTo(8, 8);
     ctx.closePath();
     ctx.fill();
 
-    // Fletching feathers
-    ctx.fillStyle = '#FF8F00';
+    // Shine on arrow head
+    ctx.fillStyle = '#EF5350';
     ctx.beginPath();
-    ctx.moveTo(-18, 0);
-    ctx.lineTo(-24, -6);
-    ctx.lineTo(-14, -1);
+    ctx.moveTo(16, -2);
+    ctx.lineTo(11, -5);
+    ctx.lineTo(12, -1);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = '#FFB300';
+
+    // Fletching
+    ctx.fillStyle = '#FF6F00';
     ctx.beginPath();
-    ctx.moveTo(-18, 0);
-    ctx.lineTo(-24, 6);
-    ctx.lineTo(-14, 1);
+    ctx.moveTo(-22, 0);
+    ctx.lineTo(-32, -10);
+    ctx.lineTo(-18, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-22, 0);
+    ctx.lineTo(-32, 10);
+    ctx.lineTo(-18, 2);
     ctx.closePath();
     ctx.fill();
 
@@ -485,8 +506,9 @@ function drawArrow(ctx: CanvasRenderingContext2D, arrow: ArrowState) {
 }
 
 function drawHitEffect(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number, correct: boolean) {
-    const radius = Math.min(frame * 3, 30);
-    const alpha = Math.max(1 - frame * 0.04, 0);
+    const progress = Math.min(frame / 30, 1);
+    const radius = progress * 50;
+    const alpha = 1 - progress;
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -494,41 +516,76 @@ function drawHitEffect(ctx: CanvasRenderingContext2D, x: number, y: number, fram
     if (correct) {
         // Green burst
         ctx.strokeStyle = '#4CAF50';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.stroke();
 
         // Stars
-        for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            const sx = x + Math.cos(angle) * radius * 1.2;
-            const sy = y + Math.sin(angle) * radius * 1.2;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2 + frame * 0.1;
+            const dist = radius * 1.3;
             ctx.fillStyle = '#FFD700';
-            ctx.font = `${12 + frame * 0.3}px sans-serif`;
+            ctx.font = `${20 + frame * 0.5}px sans-serif`;
             ctx.textAlign = 'center';
-            ctx.fillText('⭐', sx, sy);
+            ctx.fillText('✨', x + Math.cos(angle) * dist, y + Math.sin(angle) * dist);
         }
+
+        // "+100" text
+        ctx.fillStyle = '#4CAF50';
+        ctx.font = 'bold 28px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+100', x, y - radius - 20);
     } else {
         // Red X
         ctx.strokeStyle = '#F44336';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.font = `${16 + frame * 0.5}px sans-serif`;
+
+        ctx.font = `${30 + frame}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('❌', x, y + 6);
+        ctx.fillText('❌', x, y + 10);
     }
 
     ctx.restore();
+}
+
+function drawPowerBar(ctx: CanvasRenderingContext2D, x: number, y: number, power: number, maxPower: number) {
+    const barW = 120, barH = 16;
+    const fill = Math.min(power / maxPower, 1);
+
+    // Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.beginPath();
+    ctx.roundRect(x - barW / 2, y, barW, barH, 8);
+    ctx.fill();
+
+    // Fill gradient
+    const gradient = ctx.createLinearGradient(x - barW / 2, y, x + barW / 2, y);
+    gradient.addColorStop(0, '#4CAF50');
+    gradient.addColorStop(0.5, '#FFEB3B');
+    gradient.addColorStop(1, '#F44336');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(x - barW / 2 + 2, y + 2, (barW - 4) * fill, barH - 4, 6);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 11px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('POWER', x, y - 6);
 }
 
 // ==========================================
 // MAIN COMPONENT
 // ==========================================
 export default function MonkeyArrow() {
-    const [phase, setPhase] = useState<'menu' | 'playing' | 'results'>('menu');
+    const sfx = useGameSFX();
+    const tutorial = useTutorial('forest-archer');
+    const [phase, setPhase] = useState<'menu' | 'tutorial' | 'playing' | 'results'>('menu');
     const [rounds, setRounds] = useState<RoundData[]>([]);
     const [currentRound, setCurrentRound] = useState(0);
     const [score, setScore] = useState(0);
@@ -538,22 +595,34 @@ export default function MonkeyArrow() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animRef = useRef<number>(0);
     const frameRef = useRef(0);
-    const dims = useRef({ w: 400, h: 520 });
+    const dims = useRef({ w: 400, h: 600 });
 
-    // Game state refs
     const arrowRef = useRef<ArrowState | null>(null);
-    const dragRef = useRef<DragState>({ dragging: false, startX: 0, startY: 0, currentX: 0, currentY: 0 });
+    const aimRef = useRef<AimState>({ aiming: false, angle: -0.3, power: 0, startY: 0 });
+    const targetsRef = useRef<Target[]>([]);
     const canShootRef = useRef(true);
     const hitEffectRef = useRef<{ x: number; y: number; frame: number; correct: boolean } | null>(null);
     const roundsRef = useRef<RoundData[]>([]);
     const currentRoundRef = useRef(0);
 
-    const MONKEY_X = 60;
-    const MONKEY_Y = dims.current.h * 0.65;
-    const BOW_X = MONKEY_X + 36;
-    const BOW_Y = MONKEY_Y - 6;
+    const spawnTargets = useCallback((roundData: RoundData, w: number, h: number) => {
+        const targets: Target[] = roundData.options.map((opt, i) => ({
+            x: w + 50 + i * 150,
+            y: h * 0.25 + (i % 2) * h * 0.25 + Math.random() * h * 0.1,
+            word: opt,
+            isCorrect: opt.id === roundData.question.id,
+            hit: false,
+            scale: 0.9 + Math.random() * 0.3,
+            speed: 0.8 + Math.random() * 0.4
+        }));
+        targetsRef.current = targets;
+    }, []);
 
     const startGame = useCallback(() => {
+        if (tutorial.shouldShow) {
+            setPhase('tutorial');
+            return;
+        }
         const r = getRounds();
         setRounds(r);
         roundsRef.current = r;
@@ -566,9 +635,26 @@ export default function MonkeyArrow() {
         canShootRef.current = true;
         hitEffectRef.current = null;
         setPhase('playing');
-    }, []);
+        sfx.startBGM();
+    }, [tutorial.shouldShow, sfx]);
 
-    // Canvas event handlers
+    const handleTutorialDone = useCallback(() => {
+        tutorial.markSeen();
+        const r = getRounds();
+        setRounds(r);
+        roundsRef.current = r;
+        setCurrentRound(0);
+        currentRoundRef.current = 0;
+        setScore(0);
+        setCorrectCount(0);
+        setShowConfetti(false);
+        arrowRef.current = null;
+        canShootRef.current = true;
+        hitEffectRef.current = null;
+        setPhase('playing');
+        sfx.startBGM();
+    }, [tutorial, sfx]);
+
     const getCanvasCoords = useCallback((e: React.MouseEvent | React.TouchEvent): { x: number; y: number } => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
@@ -590,47 +676,55 @@ export default function MonkeyArrow() {
         if (!canShootRef.current) return;
         e.preventDefault();
         const coords = getCanvasCoords(e);
-        dragRef.current = { dragging: true, startX: coords.x, startY: coords.y, currentX: coords.x, currentY: coords.y };
+        aimRef.current = { aiming: true, angle: -0.3, power: 0, startY: coords.y };
     }, [getCanvasCoords]);
 
     const handlePointerMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        if (!dragRef.current.dragging) return;
+        if (!aimRef.current.aiming) return;
         e.preventDefault();
         const coords = getCanvasCoords(e);
-        dragRef.current.currentX = coords.x;
-        dragRef.current.currentY = coords.y;
+        const h = dims.current.h;
+
+        // Calculate angle based on vertical position (higher = more upward)
+        const centerY = h * 0.5;
+        const deltaY = centerY - coords.y;
+        aimRef.current.angle = Math.max(-0.8, Math.min(0.5, deltaY / (h * 0.5)));
+
+        // Power based on horizontal drag or time held
+        const dragDist = Math.abs(coords.y - aimRef.current.startY);
+        aimRef.current.power = Math.min(dragDist * 0.8, 80);
     }, [getCanvasCoords]);
 
     const handlePointerUp = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        if (!dragRef.current.dragging || !canShootRef.current) return;
+        if (!aimRef.current.aiming || !canShootRef.current) return;
         e.preventDefault();
-        const drag = dragRef.current;
-        drag.dragging = false;
 
-        const dx = drag.startX - drag.currentX;
-        const dy = drag.startY - drag.currentY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const aim = aimRef.current;
+        if (aim.power < 20) {
+            aim.aiming = false;
+            return;
+        }
 
-        if (dist < 15) return; // Too small drag, ignore
-
-        const power = Math.min(dist * ARROW_POWER, 16);
-        const angle = Math.atan2(dy, dx);
-        const vx = Math.cos(angle) * power * -1; // Reverse because drag is opposite
-        const vy = Math.sin(angle) * power * -1;
-
-        // Actually shoot toward drag direction (pull back = shoot forward)
-        arrowRef.current = {
-            x: BOW_X + 20,
-            y: BOW_Y,
-            vx: Math.abs(vx) < 1 ? 5 : vx > 0 ? vx : -vx,
-            vy: vy,
-            rotation: 0,
-            active: true,
-            trail: [],
-            hitTarget: null,
-        };
+        aim.aiming = false;
         canShootRef.current = false;
-    }, [BOW_X, BOW_Y]);
+
+        const { w, h } = dims.current;
+        const startX = w * 0.2;
+        const startY = h * 0.55;
+
+        const speed = (aim.power / 80) * ARROW_SPEED;
+        sfx.playShoot();
+
+        arrowRef.current = {
+            x: startX,
+            y: startY,
+            vx: Math.cos(aim.angle) * speed,
+            vy: Math.sin(aim.angle) * speed,
+            rotation: aim.angle,
+            active: true,
+            trail: []
+        };
+    }, [sfx]);
 
     // Game loop
     useEffect(() => {
@@ -642,7 +736,7 @@ export default function MonkeyArrow() {
         if (!parent) return;
 
         const w = parent.clientWidth || 400;
-        const h = parent.clientHeight || 520;
+        const h = parent.clientHeight || 600;
         const dpr = window.devicePixelRatio || 1;
         canvas.width = w * dpr;
         canvas.height = h * dpr;
@@ -652,9 +746,10 @@ export default function MonkeyArrow() {
         if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         dims.current = { w, h };
 
-        const monkeyY = h * 0.65;
-        const bowX = MONKEY_X + 36;
-        const bowY = monkeyY - 6;
+        // Spawn initial targets
+        if (roundsRef.current[currentRoundRef.current]) {
+            spawnTargets(roundsRef.current[currentRoundRef.current], w, h);
+        }
 
         const loop = () => {
             if (!ctx) return;
@@ -663,39 +758,22 @@ export default function MonkeyArrow() {
             const rnd = roundsRef.current[currentRoundRef.current];
             if (!rnd) return;
 
-            // Clear & draw background
-            drawSky(ctx, w, h);
-            drawGround(ctx, w, h);
+            // Draw scene
+            drawForestBackground(ctx, w, h, f);
 
-            // Draw targets
-            drawTargets(ctx, rnd.targets, f);
-
-            // Draw trajectory preview while dragging
-            const drag = dragRef.current;
-            if (drag.dragging && canShootRef.current) {
-                const dx = drag.startX - drag.currentX;
-                const dy = drag.startY - drag.currentY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 15) {
-                    const power = Math.min(dist * ARROW_POWER, 16);
-                    const angle = Math.atan2(dy, dx);
-                    const tvx = Math.cos(angle) * power * -1;
-                    const tvy = Math.sin(angle) * power * -1;
-                    const shootVx = Math.abs(tvx) < 1 ? 5 : tvx > 0 ? tvx : -tvx;
-                    drawTrajectory(ctx, bowX + 20, bowY, shootVx, tvy);
-
-                    // Draw pull-back line
-                    ctx.save();
-                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([4, 4]);
-                    ctx.beginPath();
-                    ctx.moveTo(drag.startX, drag.startY);
-                    ctx.lineTo(drag.currentX, drag.currentY);
-                    ctx.stroke();
-                    ctx.restore();
+            // Update & draw targets (moving left)
+            const targets = targetsRef.current;
+            targets.forEach(t => {
+                if (!t.hit) {
+                    t.x -= t.speed;
+                    // Respawn if off screen
+                    if (t.x < -100) {
+                        t.x = w + 100 + Math.random() * 100;
+                        t.y = h * 0.2 + Math.random() * h * 0.35;
+                    }
                 }
-            }
+                drawTarget(ctx, t, f);
+            });
 
             // Update & draw arrow
             const arrow = arrowRef.current;
@@ -704,54 +782,63 @@ export default function MonkeyArrow() {
                 arrow.y += arrow.vy;
                 arrow.vy += GRAVITY;
                 arrow.rotation = Math.atan2(arrow.vy, arrow.vx);
-                arrow.trail.push({ x: arrow.x, y: arrow.y });
-                if (arrow.trail.length > 20) arrow.trail.shift();
 
-                // Check collision with targets
-                for (let i = 0; i < rnd.targets.length; i++) {
-                    const t = rnd.targets[i];
+                // Trail
+                arrow.trail.unshift({ x: arrow.x, y: arrow.y, alpha: 1 });
+                if (arrow.trail.length > 15) arrow.trail.pop();
+                arrow.trail.forEach((p, i) => { p.alpha = 1 - i / 15; });
+
+                // Check collision
+                for (const t of targets) {
                     if (t.hit) continue;
-                    const wobbleY = Math.sin(f * 0.025 + t.wobble) * 4;
-                    if (
-                        arrow.x > t.x && arrow.x < t.x + TARGET_W &&
-                        arrow.y > t.y + wobbleY - 5 && arrow.y < t.y + wobbleY + TARGET_H + 5
-                    ) {
+                    const targetCenterX = t.x;
+                    const targetCenterY = t.y;
+                    const hitRadius = TARGET_SIZE * t.scale * 0.5;
+
+                    const dx = arrow.x - targetCenterX;
+                    const dy = arrow.y - targetCenterY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < hitRadius) {
                         arrow.active = false;
-                        arrow.hitTarget = i;
-                        hitEffectRef.current = { x: t.x + TARGET_W / 2, y: t.y + TARGET_H / 2 + wobbleY, frame: 0, correct: t.isCorrect };
+                        t.hit = true;
+                        hitEffectRef.current = { x: t.x, y: t.y, frame: 0, correct: t.isCorrect };
 
                         if (t.isCorrect) {
-                            t.hit = true;
+                            sfx.playHit();
+                            sfx.playCorrect();
                             setScore(s => s + 100);
                             setCorrectCount(c => c + 1);
-                            if (t.word.audioTotoUrl) {
-                                try { new Audio(t.word.audioTotoUrl).play().catch(() => { }); } catch { }
-                            }
+
                             setTimeout(() => {
                                 hitEffectRef.current = null;
                                 arrowRef.current = null;
                                 if (currentRoundRef.current + 1 >= TOTAL_ROUNDS) {
                                     setShowConfetti(true);
+                                    sfx.playVictory();
+                                    sfx.stopBGM();
                                     setPhase('results');
                                 } else {
                                     currentRoundRef.current++;
                                     setCurrentRound(r => r + 1);
+                                    spawnTargets(roundsRef.current[currentRoundRef.current], w, h);
                                     canShootRef.current = true;
                                 }
-                            }, 1200);
+                            }, 1000);
                         } else {
+                            sfx.playWrong();
                             setTimeout(() => {
                                 hitEffectRef.current = null;
                                 arrowRef.current = null;
                                 canShootRef.current = true;
-                            }, 800);
+                            }, 600);
                         }
                         break;
                     }
                 }
 
                 // Off screen
-                if (arrow.x > w + 30 || arrow.y > h + 30 || arrow.x < -30) {
+                if (arrow.x > w + 50 || arrow.y > h + 50 || arrow.x < -50 || arrow.y < -50) {
                     arrowRef.current = null;
                     canShootRef.current = true;
                 }
@@ -765,16 +852,29 @@ export default function MonkeyArrow() {
                 drawHitEffect(ctx, hitEffectRef.current.x, hitEffectRef.current.y, hitEffectRef.current.frame, hitEffectRef.current.correct);
             }
 
-            // Draw monkey on top
-            drawMonkey(ctx, MONKEY_X, monkeyY, f, drag.dragging);
+            // Draw bow and hands
+            const aim = aimRef.current;
+            drawBowAndHands(ctx, w, h, aim, f);
 
-            // Aim indicator (drag instruction)
-            if (canShootRef.current && !drag.dragging && !arrow) {
+            // Trajectory preview
+            if (aim.aiming && aim.power >= 20) {
+                const startX = w * 0.2;
+                const startY = h * 0.55;
+                drawTrajectory(ctx, startX, startY, aim.angle, aim.power);
+                drawPowerBar(ctx, w * 0.5, h * 0.92, aim.power, 80);
+            }
+
+            // Instructions
+            if (canShootRef.current && !aim.aiming && !arrow) {
                 ctx.save();
-                ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                ctx.font = '12px Nunito, system-ui, sans-serif';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.beginPath();
+                ctx.roundRect(w * 0.25, h * 0.88, w * 0.5, 36, 18);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 13px Nunito, system-ui, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('👆 Drag anywhere to aim & shoot!', w / 2, h * 0.82 + 20);
+                ctx.fillText('👆 Touch & drag up to aim, release to shoot!', w / 2, h * 0.9 + 8);
                 ctx.restore();
             }
 
@@ -783,30 +883,41 @@ export default function MonkeyArrow() {
 
         animRef.current = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(animRef.current);
-    }, [phase, MONKEY_X]);
+    }, [phase, spawnTargets, sfx]);
+
+    // Cleanup
+    useEffect(() => () => { sfx.stopBGM(); }, [sfx]);
 
     // ==========================================
     // SCREENS
     // ==========================================
+    if (phase === 'tutorial') {
+        return (
+            <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
+                <GameTutorial gameId="forest-archer" steps={TUTORIAL_STEPS} onComplete={handleTutorialDone} />
+            </PlayGameShell>
+        );
+    }
+
     if (phase === 'menu') {
         return (
-            <PlayGameShell title="Monkey Arrow" icon="🐒" gradient="from-lime-400 to-emerald-500">
+            <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
                 <div className="flex flex-col items-center justify-center min-h-[65vh] px-5 text-center">
-                    <div className="text-7xl mb-4">🐒🏹</div>
-                    <h2 className="text-xl font-extrabold text-gray-800 mt-2 mb-2">Monkey Arrow</h2>
+                    <div className="text-7xl mb-4">🏹🌲</div>
+                    <h2 className="text-xl font-extrabold text-gray-800 mt-2 mb-2">Forest Archer</h2>
                     <p className="text-sm text-gray-500 mb-2 max-w-xs">
-                        Help the monkey archer hit the correct word target!
+                        You are an archer in the magical forest. Hit targets with the correct Toto words!
                     </p>
-                    <div className="bg-lime-50 border border-lime-200 rounded-xl p-3 mb-6 text-xs text-lime-700 max-w-xs text-left">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-6 text-xs text-green-700 max-w-xs text-left">
                         <p className="font-semibold text-center mb-1">How to play:</p>
-                        <p>• See the English word at the top</p>
-                        <p>• <strong>Drag anywhere</strong> to aim — trajectory line shows where the arrow will go</p>
-                        <p>• <strong>Release</strong> to shoot!</p>
-                        <p>• Hit the matching word target</p>
-                        <p>• {TOTAL_ROUNDS} rounds to master</p>
+                        <p>• See the English word you need to find</p>
+                        <p>• <strong>Touch and drag up/down</strong> to aim your bow</p>
+                        <p>• <strong>Release</strong> to shoot the arrow</p>
+                        <p>• Hit the target with the matching Toto word</p>
+                        <p>• Complete {TOTAL_ROUNDS} rounds to win!</p>
                     </div>
-                    <button onClick={startGame} className="btn-game bg-gradient-to-r from-lime-500 to-emerald-600 text-white px-12 py-3 text-lg rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
-                        Start Shooting! 🏹
+                    <button onClick={() => { sfx.playClick(); startGame(); }} className="btn-game bg-gradient-to-r from-green-500 to-emerald-600 text-white px-12 py-3 text-lg rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
+                        Enter Forest 🌲
                     </button>
                 </div>
             </PlayGameShell>
@@ -816,12 +927,12 @@ export default function MonkeyArrow() {
     if (phase === 'results') {
         const percentage = Math.round((correctCount / TOTAL_ROUNDS) * 100);
         return (
-            <PlayGameShell title="Monkey Arrow" icon="🐒" gradient="from-lime-400 to-emerald-500">
+            <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
                 <div className="flex flex-col items-center justify-center min-h-[65vh] px-5 text-center animate-fade-in">
                     {showConfetti && <Confetti />}
                     <span className="text-6xl mb-3">{percentage >= 80 ? '🏆' : percentage >= 50 ? '⭐' : '💪'}</span>
                     <h2 className="text-2xl font-extrabold text-gray-800 mb-1">
-                        {percentage >= 80 ? 'Amazing Archery!' : percentage >= 50 ? 'Good Shots!' : 'Keep Practicing!'}
+                        {percentage >= 80 ? 'Master Archer!' : percentage >= 50 ? 'Good Shooting!' : 'Keep Practicing!'}
                     </h2>
                     <p className="text-gray-500 mb-4">You hit {correctCount} out of {TOTAL_ROUNDS} targets!</p>
                     <div className="bg-white rounded-2xl shadow-lg p-5 w-full max-w-xs">
@@ -840,12 +951,12 @@ export default function MonkeyArrow() {
                             </div>
                         </div>
                     </div>
-                    <Mascot mood="happy" size="sm" message="Great archery skills! 🎯" className="mt-4" />
+                    <Mascot mood="happy" size="sm" message="Amazing forest skills! 🎯" className="mt-4" />
                     <div className="mt-5 flex gap-3">
-                        <button onClick={startGame} className="btn-game bg-gradient-to-r from-lime-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg active:scale-95">
+                        <button onClick={() => { sfx.playClick(); startGame(); }} className="btn-game bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg active:scale-95">
                             Play Again 🔄
                         </button>
-                        <button onClick={() => window.history.back()} className="btn-game bg-white text-gray-700 border-2 border-gray-200 px-6 py-3 rounded-xl font-bold active:scale-95">
+                        <button onClick={() => { sfx.stopBGM(); window.history.back(); }} className="btn-game bg-white text-gray-700 border-2 border-gray-200 px-6 py-3 rounded-xl font-bold active:scale-95">
                             Back
                         </button>
                     </div>
@@ -857,22 +968,25 @@ export default function MonkeyArrow() {
     // Playing
     const round = rounds[currentRound];
     return (
-        <PlayGameShell title="Monkey Arrow" icon="🐒" gradient="from-lime-400 to-emerald-500">
+        <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
             <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)' }}>
                 {/* Question bar */}
-                <div className="flex items-center justify-between px-3 py-2 bg-white/80 backdrop-blur-sm shrink-0 border-b border-gray-100">
+                <div className="flex items-center justify-between px-3 py-2 bg-white/90 backdrop-blur-sm shrink-0 border-b border-gray-100 shadow-sm">
                     <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">🪙 {score}</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-1.5">
+                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">
                         {round?.question.imageUrl && (
-                            <img src={round.question.imageUrl} alt="" className="w-6 h-6 rounded object-cover" />
+                            <img src={round.question.imageUrl} alt="" className="w-7 h-7 rounded object-cover" />
                         )}
-                        <span className="text-sm font-bold text-blue-800">Find: {round?.question.english}</span>
+                        <div className="text-left">
+                            <span className="text-xs text-green-600">Find:</span>
+                            <span className="text-sm font-bold text-green-800 ml-1">{round?.question.english}</span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-0.5">
                         {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => (
-                            <div key={i} className={`w-2 h-2 rounded-full transition-colors ${i < correctCount ? 'bg-emerald-500' : i === currentRound ? 'bg-amber-400 animate-pulse' : 'bg-gray-200'}`} />
+                            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-colors ${i < correctCount ? 'bg-green-500' : i === currentRound ? 'bg-amber-400 animate-pulse' : 'bg-gray-200'}`} />
                         ))}
                     </div>
                 </div>
@@ -883,11 +997,12 @@ export default function MonkeyArrow() {
                     onMouseDown={handlePointerDown}
                     onMouseMove={handlePointerMove}
                     onMouseUp={handlePointerUp}
+                    onMouseLeave={handlePointerUp}
                     onTouchStart={handlePointerDown}
                     onTouchMove={handlePointerMove}
                     onTouchEnd={handlePointerUp}
                 >
-                    <canvas ref={canvasRef} className="block absolute inset-0 cursor-crosshair" style={{ touchAction: 'none' }} />
+                    <canvas ref={canvasRef} className="block absolute inset-0" style={{ touchAction: 'none' }} />
                 </div>
             </div>
         </PlayGameShell>
