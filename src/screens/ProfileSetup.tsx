@@ -99,8 +99,9 @@ export default function ProfileSetup() {
           <p className="text-muted-foreground mb-6">{t('profile.personalizeExp')}</p>
           <div className="grid grid-cols-2 gap-4">
             <button
+              type="button"
               onClick={() => setRole('child')}
-              className={`card-game p-6 text-center transition-all ${role === 'child' ? 'ring-3 ring-game-primary' : ''
+              className={`card-game p-6 text-center transition-all ${role === 'child' ? 'ring-4 ring-game-primary bg-game-primary/10 scale-105' : ''
                 }`}
             >
               <div className="text-5xl mb-3">👧</div>
@@ -108,8 +109,9 @@ export default function ProfileSetup() {
               <div className="text-sm text-muted-foreground">{t('profile.studentDesc')}</div>
             </button>
             <button
+              type="button"
               onClick={() => setRole('teacher')}
-              className={`card-game p-6 text-center transition-all ${role === 'teacher' ? 'ring-3 ring-game-primary' : ''
+              className={`card-game p-6 text-center transition-all ${role === 'teacher' ? 'ring-4 ring-game-primary bg-game-primary/10 scale-105' : ''
                 }`}
             >
               <div className="text-5xl mb-3">👨‍🏫</div>
@@ -138,7 +140,7 @@ export default function ProfileSetup() {
                 key={i}
                 onClick={() => setSelectedAvatar(i)}
                 className={`text-4xl p-4 rounded-2xl transition-all ${selectedAvatar === i
-                    ? 'bg-game-primary/10 ring-3 ring-game-primary scale-110'
+                    ? 'bg-game-primary/10 ring-4 ring-game-primary scale-110'
                     : 'bg-white hover:bg-gray-50'
                   }`}
               >
