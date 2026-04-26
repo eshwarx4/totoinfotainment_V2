@@ -7,7 +7,7 @@ import { getWorldConfig } from '@/config/worlds';
 import { fetchConcepts, fetchConceptSlides, fetchStories } from '@/lib/supabaseQueries';
 import { transformConceptToStory, transformStoryRowToStory } from '@/lib/dataTransformers';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
 export default function StoryScreen() {
   const { worldId, storyType } = useParams<{ worldId: string; storyType: string }>();
@@ -29,14 +29,12 @@ export default function StoryScreen() {
         if (isConcept) {
           const concepts = await fetchConcepts();
           if (concepts.length > 0) {
-            // Pick a concept (simple: first one for now)
             const concept = concepts[0];
             const slides = await fetchConceptSlides(concept.id);
             setStory(transformConceptToStory(concept, slides));
           }
         } else {
           const stories = await fetchStories();
-          // Pick a folk story
           const folk = stories.filter(s => s.type?.toLowerCase().includes('folk'));
           if (folk.length > 0) {
             setStory(transformStoryRowToStory(folk[0]));
@@ -76,10 +74,10 @@ export default function StoryScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex items-center justify-center`}>
         <div className="text-center">
           <div className="text-5xl mb-4 mascot-bounce">📖</div>
-          <p className="text-muted-foreground font-semibold">Loading story...</p>
+          <p className="text-white/80 font-bold text-lg drop-shadow">Loading story...</p>
         </div>
       </div>
     );
@@ -87,14 +85,15 @@ export default function StoryScreen() {
 
   if (!story) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-6">
-        <div className="text-center">
+      <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex items-center justify-center px-6`}>
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 text-center shadow-xl max-w-sm border border-white/50">
           <div className="text-5xl mb-4">📭</div>
-          <h2 className="text-xl font-bold mb-2">No Story Available</h2>
-          <p className="text-muted-foreground mb-4">
+          <h2 className="text-xl font-bold mb-2 text-gray-800">No Story Available</h2>
+          <p className="text-gray-500 mb-4 text-sm">
             This story hasn't been added yet.
           </p>
-          <button onClick={() => navigate(`/world/${wid}`)} className="btn-game-primary">
+          <button onClick={() => navigate(`/world/${wid}`)}
+            className="bg-gray-800 text-white font-bold px-6 py-3 rounded-xl active:scale-95 transition-all">
             Go Back
           </button>
         </div>
@@ -106,31 +105,34 @@ export default function StoryScreen() {
   const isLastSlide = currentSlide === story.slides.length - 1;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col screen-enter">
+    <div className="min-h-screen flex flex-col screen-enter"
+      style={{ background: 'linear-gradient(180deg, #fefce8 0%, #fffbeb 40%, #fef3c7 100%)' }}
+    >
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-border/50">
+      <div className={`sticky top-0 z-30 bg-gradient-to-r ${worldConfig.bgGradient} shadow-md`}>
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(`/world/${wid}`)}
-              className="flex items-center gap-1 text-muted-foreground font-semibold"
+              className="flex items-center gap-1.5 text-white/80 hover:text-white font-semibold text-sm
+                         bg-black/10 backdrop-blur-sm px-3 py-1.5 rounded-full active:scale-95 transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
-            <span className="text-sm font-bold">
-              {isConcept ? '📘 Concept Story' : '📜 Folk Story'}
+            <span className="text-sm font-bold text-white drop-shadow flex items-center gap-1.5">
+              {isConcept ? '📘' : '📜'} {isConcept ? 'Concept Story' : 'Folk Story'}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="bg-black/15 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs text-white font-bold">
               {currentSlide + 1}/{story.slides.length}
             </span>
           </div>
-          {/* Progress */}
-          <div className="flex gap-1 mt-2">
+          {/* Progress dots */}
+          <div className="flex gap-1 mt-2.5">
             {story.slides.map((_, i) => (
               <div
                 key={i}
-                className={`h-1 flex-1 rounded-full transition-all ${i <= currentSlide ? 'bg-game-primary' : 'bg-muted'
+                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= currentSlide ? 'bg-white' : 'bg-white/25'
                   }`}
               />
             ))}
@@ -139,9 +141,9 @@ export default function StoryScreen() {
       </div>
 
       {/* Story content */}
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-6">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-5">
         {/* Image */}
-        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-muted mb-4">
+        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-white shadow-lg mb-4 border border-amber-100">
           <img
             src={slide.imageUrl}
             alt={slide.english}
@@ -151,11 +153,11 @@ export default function StoryScreen() {
         </div>
 
         {/* Text */}
-        <div className="card-game p-5 mb-4 flex-1">
-          <p className="text-lg font-bold mb-2 text-foreground leading-relaxed">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 mb-4 flex-1 shadow-md border border-amber-100/50">
+          <p className="text-lg font-bold mb-2 text-gray-800 leading-relaxed">
             {slide.toto}
           </p>
-          <p className="text-base text-muted-foreground leading-relaxed">
+          <p className="text-base text-gray-500 leading-relaxed">
             {slide.english}
           </p>
         </div>
@@ -175,26 +177,33 @@ export default function StoryScreen() {
           <button
             onClick={handlePrev}
             disabled={currentSlide === 0}
-            className="flex-1 btn-game-secondary disabled:opacity-30"
+            className="flex-1 bg-white/60 backdrop-blur-sm text-gray-600 font-bold py-3.5 rounded-2xl
+                       border border-gray-200 disabled:opacity-30 active:scale-95 transition-all
+                       flex items-center justify-center gap-1"
           >
-            <ChevronLeft className="w-5 h-5 inline mr-1" />
+            <ChevronLeft className="w-5 h-5" />
             Prev
           </button>
           {!isLastSlide ? (
-            <button onClick={handleNext} className="flex-1 btn-game-primary">
+            <button onClick={handleNext}
+              className={`flex-1 bg-gradient-to-r ${worldConfig.bgGradient} text-white font-bold py-3.5 rounded-2xl
+                         shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1`}>
               Next
-              <ChevronRight className="w-5 h-5 inline ml-1" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           ) : completed ? (
             <button
               onClick={() => navigate(`/world/${wid}`)}
-              className="flex-1 btn-game-primary"
+              className="flex-1 bg-emerald-500 text-white font-bold py-3.5 rounded-2xl shadow-lg
+                         active:scale-95 transition-all flex items-center justify-center gap-1"
             >
-              Done! ✅
+              <CheckCircle className="w-5 h-5" /> Done!
             </button>
           ) : (
-            <button onClick={handleComplete} className="flex-1 btn-game-primary">
-              Complete Story! 🎉
+            <button onClick={handleComplete}
+              className={`flex-1 bg-gradient-to-r ${worldConfig.bgGradient} text-white font-bold py-3.5 rounded-2xl
+                         shadow-lg active:scale-95 transition-all flex items-center justify-center gap-1`}>
+              Complete! 🎉
             </button>
           )}
         </div>

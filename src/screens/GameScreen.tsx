@@ -11,8 +11,10 @@ import { ALL_WORDS as LOCAL_WORDS } from '@/data/wordData';
 import TapTheImage from '@/components/games/TapTheImage';
 import MemoryMatch from '@/components/games/MemoryMatch';
 import SpeedChallenge from '@/components/games/SpeedChallenge';
+import { X } from 'lucide-react';
 
 const GAME_NAMES = ['', 'Tap the Image', 'Memory Match', 'Speed Challenge'];
+const GAME_EMOJIS = ['', '👆', '🧠', '⚡'];
 
 /**
  * Convert local wordData items to the content WordItem format used by game components
@@ -100,10 +102,10 @@ export default function GameScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex items-center justify-center`}>
         <div className="text-center">
           <div className="text-5xl mb-4 mascot-bounce">🎮</div>
-          <p className="text-muted-foreground font-semibold">Preparing game...</p>
+          <p className="text-white/80 font-bold text-lg drop-shadow">Preparing game...</p>
         </div>
       </div>
     );
@@ -111,16 +113,16 @@ export default function GameScreen() {
 
   if (levelWords.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-6">
-        <div className="text-center">
+      <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex items-center justify-center px-6`}>
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 text-center shadow-xl max-w-sm border border-white/50">
           <div className="text-5xl mb-4">😞</div>
-          <h2 className="text-xl font-bold mb-2">No Words Available</h2>
-          <p className="text-muted-foreground mb-4">
+          <h2 className="text-xl font-bold mb-2 text-gray-800">No Words Available</h2>
+          <p className="text-gray-500 mb-4 text-sm">
             There aren't enough words in the "{worldConfig.category}" category yet.
           </p>
           <button
             onClick={() => navigate(`/world/${wid}`)}
-            className="btn-game-primary"
+            className="bg-gray-800 text-white font-bold px-6 py-3 rounded-xl active:scale-95 transition-all"
           >
             Go Back
           </button>
@@ -130,34 +132,56 @@ export default function GameScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white screen-enter">
-      {/* Game progress bar */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-border/50">
+    <div className="min-h-screen screen-enter"
+      style={{
+        background: `linear-gradient(180deg, #f8fafc 0%, #f1f5f9 40%, #e2e8f0 100%)`
+      }}
+    >
+      {/* Game header bar */}
+      <div className="sticky top-0 z-30 backdrop-blur-xl border-b border-gray-200/60"
+        style={{
+          background: `linear-gradient(135deg, rgba(255,255,255,0.92), rgba(248,250,252,0.95))`
+        }}
+      >
         <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2.5">
             <button
               onClick={() => navigate(`/world/${wid}`)}
-              className="text-sm text-muted-foreground font-semibold hover:text-foreground"
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center
+                         transition-all active:scale-90"
             >
-              ✕ Quit
+              <X className="w-4 h-4 text-gray-500" />
             </button>
-            <span className="text-sm font-bold">
-              Game {gameIndex}/3: {GAME_NAMES[gameIndex]}
-            </span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-gradient-to-r ${worldConfig.bgGradient} text-white`}>
-              Lv.{level}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{GAME_EMOJIS[gameIndex]}</span>
+              <span className="text-sm font-bold text-gray-700">
+                {GAME_NAMES[gameIndex]}
+              </span>
+            </div>
+            <div className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${worldConfig.bgGradient} text-white shadow-sm`}>
+              {worldConfig.icon} Lv.{level}
+            </div>
           </div>
           {/* 3-step progress */}
           <div className="flex gap-1.5">
             {[1, 2, 3].map(g => (
-              <div
-                key={g}
-                className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${g < gameIndex ? 'bg-game-primary' :
-                    g === gameIndex ? 'bg-game-primary/60' :
-                      'bg-muted'
-                  }`}
-              />
+              <div key={g} className="h-2 flex-1 rounded-full overflow-hidden bg-gray-200">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${g < gameIndex ? `bg-gradient-to-r ${worldConfig.bgGradient}`
+                      : g === gameIndex ? `bg-gradient-to-r ${worldConfig.bgGradient} opacity-70`
+                        : ''
+                    }`}
+                  style={{ width: g <= gameIndex ? '100%' : '0%' }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-1.5">
+            {[1, 2, 3].map(g => (
+              <span key={g} className={`text-[10px] font-medium ${g <= gameIndex ? 'text-gray-600' : 'text-gray-400'
+                }`}>
+                {GAME_NAMES[g]}
+              </span>
             ))}
           </div>
         </div>

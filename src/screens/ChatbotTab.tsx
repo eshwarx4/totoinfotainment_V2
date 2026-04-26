@@ -286,16 +286,44 @@ let ttsQueue: string[] = [];
 let ttsLang: Lang = 'en';
 let ttsStopped = false;
 
+// ---- Voice pre-loading cache ----
+let cachedVoices: SpeechSynthesisVoice[] = [];
+let voicesLoaded = false;
+
+function refreshVoiceCache() {
+  try {
+    cachedVoices = speechSynthesis.getVoices();
+    if (cachedVoices.length > 0) voicesLoaded = true;
+  } catch { /* ignore */ }
+}
+
+// Load voices eagerly + re-load when the browser finishes loading them
+refreshVoiceCache();
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = refreshVoiceCache;
+}
+
+// Normalise a voice-lang tag for comparison: "bn_IN" → "bn-in"
+function normLang(tag: string): string {
+  return tag.replace(/_/g, '-').toLowerCase();
+}
+
 // Pick the best available voice for a language
 function getBestVoice(lang: Lang): SpeechSynthesisVoice | null {
   try {
-    const voices = speechSynthesis.getVoices();
+    // Always try a fresh fetch if cache is empty
+    if (cachedVoices.length === 0) refreshVoiceCache();
     const locale = lang === 'bn' ? 'bn' : 'en';
+
+    // Match voices whose normalised lang starts with the target locale
+    const matching = cachedVoices.filter(v => normLang(v.lang).startsWith(locale));
+
     // Prefer: Google voices > natural/premium > any matching voice
-    const matching = voices.filter(v => v.lang.startsWith(locale));
     const google = matching.find(v => v.name.includes('Google'));
-    const natural = matching.find(v => v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced'));
-    const female = matching.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Karen'));
+    const natural = matching.find(v =>
+      v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced'));
+    const female = matching.find(v =>
+      v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Karen'));
     return google || natural || female || matching[0] || null;
   } catch { return null; }
 }
@@ -343,7 +371,20 @@ function speakText(text: string, lang: Lang) {
       if (current.trim()) ttsQueue.push(current.trim());
     }
 
-    playNextChunk();
+    // If voices haven't loaded yet, wait briefly then play
+    if (!voicesLoaded) {
+      const waitForVoices = (retries: number) => {
+        refreshVoiceCache();
+        if (voicesLoaded || retries <= 0) {
+          playNextChunk();
+        } else {
+          setTimeout(() => waitForVoices(retries - 1), 200);
+        }
+      };
+      waitForVoices(5); // wait up to 1s (5 × 200ms)
+    } else {
+      playNextChunk();
+    }
   } catch { /* ignore */ }
 }
 

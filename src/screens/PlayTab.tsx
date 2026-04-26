@@ -87,6 +87,26 @@ const GAMES = [
         route: '/play/spelling',
         delay: 560,
     },
+    {
+        id: 'snake',
+        icon: '🐍',
+        titleKey: 'play.snake',
+        descKey: 'play.snakeDesc',
+        gradient: 'from-green-500 to-emerald-600',
+        shadow: 'rgba(16, 185, 129, 0.4)',
+        route: '/play/snake',
+        delay: 640,
+    },
+    {
+        id: 'board',
+        icon: '🎲',
+        titleKey: 'play.board',
+        descKey: 'play.boardDesc',
+        gradient: 'from-amber-500 to-orange-600',
+        shadow: 'rgba(245, 158, 11, 0.4)',
+        route: '/play/board',
+        delay: 720,
+    },
 ];
 
 const MASCOT_MESSAGE_KEYS = [

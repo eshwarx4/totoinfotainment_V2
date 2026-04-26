@@ -45,6 +45,8 @@ import WordFinder from "./components/play/wordfinder/WordFinder";
 import QuickChallenge from "./components/play/challenge/QuickChallenge";
 import MonkeyArrow from "./components/play/monkey/MonkeyArrow";
 import SpellingLearner from "./components/play/spelling/SpellingLearner";
+import WordSnake from "./components/play/snake/WordSnake";
+import BoardQuest from "./components/play/board/BoardQuest";
 
 import NotFound from "./pages/NotFound";
 
@@ -113,6 +115,8 @@ const App = () => (
               <Route path="/play/challenge" element={<WithFrame><QuickChallenge /></WithFrame>} />
               <Route path="/play/monkey" element={<WithFrame><MonkeyArrow /></WithFrame>} />
               <Route path="/play/spelling" element={<WithFrame><SpellingLearner /></WithFrame>} />
+              <Route path="/play/snake" element={<WithFrame><WordSnake /></WithFrame>} />
+              <Route path="/play/board" element={<WithFrame><BoardQuest /></WithFrame>} />
 
               {/* === Legacy redirects === */}
               <Route path="/dashboard" element={<Navigate to="/map" replace />} />

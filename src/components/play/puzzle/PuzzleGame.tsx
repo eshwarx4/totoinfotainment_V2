@@ -5,10 +5,10 @@ import { shuffle } from '@/lib/gameUtils';
 import Mascot from '@/components/mascot/Mascot';
 import { MascotMood } from '@/components/mascot/Mascot';
 import { Confetti } from '@/components/effects/Confetti';
-import GameTutorial, { useTutorial, PUZZLE_TUTORIAL_STEPS } from '@/components/play/GameTutorial';
+
 import { useGameSFX } from '@/hooks/useGameSFX';
 
-// Tutorial steps now imported from GameTutorial as PUZZLE_TUTORIAL_STEPS
+
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -419,8 +419,7 @@ function GameResults({
  */
 export default function PuzzleGame() {
     const sfx = useGameSFX();
-    const tutorial = useTutorial('puzzle');
-    const [phase, setPhase] = useState<'select' | 'tutorial' | 'playing' | 'roundComplete' | 'results'>('select');
+    const [phase, setPhase] = useState<'select' | 'playing' | 'roundComplete' | 'results'>('select');
     const [difficulty, setDifficulty] = useState<Difficulty>('easy');
     const [words, setWords] = useState<WordItem[]>([]);
     const [currentRound, setCurrentRound] = useState(0);
@@ -431,11 +430,6 @@ export default function PuzzleGame() {
     const [mascotMood, setMascotMood] = useState<MascotMood>('happy');
 
     const startGame = useCallback((diff: Difficulty) => {
-        if (tutorial.shouldShow) {
-            setDifficulty(diff);
-            setPhase('tutorial');
-            return;
-        }
         sfx.playClick();
         setDifficulty(diff);
         setWords(getRandomWords(ROUNDS_PER_GAME));
@@ -444,7 +438,7 @@ export default function PuzzleGame() {
         setTotalXP(0);
         setPhase('playing');
         setMascotMood('thinking');
-    }, [tutorial.shouldShow, sfx]);
+    }, [sfx]);
 
     const handlePuzzleComplete = useCallback(
         (timeMs: number) => {
@@ -478,55 +472,7 @@ export default function PuzzleGame() {
         setMascotMood('happy');
     }, []);
 
-    // Tutorial - shows interactive demo with puzzle pieces
-    if (phase === 'tutorial') {
-        return (
-            <PlayGameShell title="Puzzle Builder" icon="🧩" gradient="from-violet-500 to-purple-600">
-                <div className="flex flex-col relative" style={{ height: 'calc(100vh - 56px)' }}>
-                    {/* Demo puzzle visual */}
-                    <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-violet-100 to-purple-100 flex items-center justify-center">
-                        {/* Demo grid */}
-                        <div className="grid grid-cols-2 gap-2 p-4">
-                            {[0, 1, 2, 3].map(i => (
-                                <div
-                                    key={i}
-                                    className={`w-20 h-20 rounded-lg border-2 border-dashed border-purple-300 flex items-center justify-center bg-white/50 ${i === 0 ? 'bg-purple-200 border-solid border-purple-500' : ''}`}
-                                >
-                                    {i === 0 && <span className="text-2xl">🧩</span>}
-                                    {i !== 0 && <span className="text-lg text-purple-400">{i + 1}</span>}
-                                </div>
-                            ))}
-                        </div>
-                        {/* Demo tray */}
-                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
-                            {[1, 2, 3].map(i => (
-                                <div
-                                    key={i}
-                                    className="w-14 h-14 rounded-lg bg-purple-400 shadow-lg flex items-center justify-center animate-pulse"
-                                >
-                                    <span className="text-xl">🧩</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {/* Interactive tutorial overlay */}
-                    <GameTutorial
-                        gameId="puzzle"
-                        steps={PUZZLE_TUTORIAL_STEPS}
-                        onComplete={() => {
-                            tutorial.markSeen();
-                            setWords(getRandomWords(ROUNDS_PER_GAME));
-                            setCurrentRound(0);
-                            setRoundTimes([]);
-                            setTotalXP(0);
-                            setPhase('playing');
-                            setMascotMood('thinking');
-                        }}
-                    />
-                </div>
-            </PlayGameShell>
-        );
-    }
+
 
     // Difficulty selection screen
     if (phase === 'select') {

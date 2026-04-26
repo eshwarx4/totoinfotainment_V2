@@ -7,6 +7,7 @@ import { WordItem } from '@/types/content';
 import { fetchWords } from '@/lib/supabaseQueries';
 import { transformWordRowToWordItem } from '@/lib/dataTransformers';
 import { buildLevelWords } from '@/lib/levelBuilder';
+import { ArrowLeft, Zap } from 'lucide-react';
 
 export default function LevelIntro() {
   const { worldId, levelNum } = useParams<{ worldId: string; levelNum: string }>();
@@ -42,71 +43,97 @@ export default function LevelIntro() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex items-center justify-center`}>
         <div className="text-center">
-          <div className="text-5xl mb-4 mascot-bounce">🦉</div>
-          <p className="text-muted-foreground font-semibold">Loading level...</p>
+          <div className="text-6xl mb-4 mascot-bounce">🦉</div>
+          <p className="text-white/80 font-bold text-lg drop-shadow">Loading level...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 screen-enter">
-      {/* Mascot */}
-      <div className="speech-bubble max-w-xs mb-4">
-        <p className="text-sm font-semibold text-center">
-          {worldConfig.mascotMessage.replace('Welcome to', `Level ${level} in`)}
-        </p>
+    <div className={`min-h-screen bg-gradient-to-br ${worldConfig.bgGradient} flex flex-col screen-enter`}>
+      {/* Header */}
+      <div className="px-4 pt-4 pb-2 flex-shrink-0">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <button
+            onClick={() => navigate(`/world/${wid}`)}
+            className="flex items-center gap-1.5 text-white/80 hover:text-white font-semibold text-sm
+                       bg-black/15 backdrop-blur-sm px-3 py-1.5 rounded-full transition-all active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="bg-black/15 backdrop-blur-sm px-3 py-1.5 rounded-full text-white text-xs font-bold flex items-center gap-1.5">
+            <span className="text-base">{worldConfig.icon}</span>
+            {worldConfig.name}
+          </div>
+        </div>
       </div>
-      <div className="text-6xl mb-6 mascot-bounce">🦉</div>
 
-      {/* Level info */}
-      <div className={`text-center mb-6`}>
-        <div className={`inline-block bg-gradient-to-br ${worldConfig.bgGradient} text-white px-4 py-1.5 rounded-full text-sm font-bold mb-3`}>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+        {/* Mascot speech */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-5 py-3 mb-3 shadow-lg max-w-xs border border-white/50">
+          <p className="text-sm font-semibold text-center text-gray-700">
+            {worldConfig.mascotMessage.replace('Welcome to', `Level ${level} in`)}
+          </p>
+        </div>
+        {/* Mascot arrow */}
+        <div className="w-3 h-3 bg-white/90 rotate-45 -mt-2 mb-2 shadow-sm" />
+        <div className="text-6xl mb-5 mascot-bounce drop-shadow-lg">🦉</div>
+
+        {/* Level badge */}
+        <div className="bg-black/20 backdrop-blur-sm text-white px-5 py-2 rounded-full text-sm font-extrabold mb-3
+                        shadow-lg border border-white/15 flex items-center gap-2">
+          <Zap className="w-4 h-4" />
           {worldConfig.name} — Level {level}
         </div>
-        <h2 className="text-2xl font-bold mb-2">
+
+        {/* Word count */}
+        <h2 className="text-3xl font-black text-white drop-shadow-md mb-1">
           {levelWords.length} words to learn!
         </h2>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-white/70 text-sm font-medium mb-6">
           3 games: Tap the Image → Memory Match → Speed Challenge
         </p>
-      </div>
 
-      {/* Word preview */}
-      <div className="w-full max-w-sm mb-8">
-        <h3 className="text-sm font-bold text-muted-foreground mb-3 text-center">WORDS IN THIS LEVEL</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {levelWords.map(word => (
-            <div key={word.id} className="card-game p-3 text-center">
-              <div className="w-full aspect-square rounded-xl bg-muted mb-2 overflow-hidden">
-                <img
-                  src={word.imageUrl}
-                  alt={word.english}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
-                />
+        {/* Word preview cards */}
+        <div className="w-full max-w-sm mb-8">
+          <h3 className="text-xs font-bold text-white/60 mb-3 text-center tracking-widest uppercase">
+            Words in this level
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            {levelWords.map(word => (
+              <div key={word.id}
+                className="bg-white/85 backdrop-blur-sm rounded-2xl p-3 text-center
+                           shadow-md border border-white/50 transition-transform active:scale-95">
+                <div className="w-full aspect-square rounded-xl bg-gray-100 mb-2 overflow-hidden">
+                  <img
+                    src={word.imageUrl}
+                    alt={word.english}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                  />
+                </div>
+                <p className="text-xs font-bold text-gray-800 truncate">{word.english}</p>
+                <p className="text-[10px] text-gray-500 truncate">{word.toto}</p>
               </div>
-              <p className="text-xs font-bold truncate">{word.english}</p>
-              <p className="text-xs text-muted-foreground truncate">{word.toto}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        {/* Start button */}
+        <button
+          onClick={handleStart}
+          className="bg-white text-gray-800 font-extrabold text-xl px-14 py-4 rounded-2xl
+                     shadow-xl active:scale-95 transition-all duration-150 hover:shadow-2xl
+                     border-2 border-white/80"
+        >
+          Start! 🎮
+        </button>
       </div>
-
-      {/* Start button */}
-      <button onClick={handleStart} className="btn-game-primary text-xl px-12">
-        Start! 🎮
-      </button>
-
-      {/* Back link */}
-      <button
-        onClick={() => navigate(`/world/${wid}`)}
-        className="mt-4 text-muted-foreground font-semibold hover:text-foreground transition-colors"
-      >
-        ← Back to {worldConfig.name}
-      </button>
     </div>
   );
 }

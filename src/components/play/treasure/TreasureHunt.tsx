@@ -153,6 +153,13 @@ export default function TreasureHunt() {
         setTappedId(null);
         setTapResult(null);
         setPhase('playing');
+
+        // Auto-play Toto audio for the target word
+        if (data.target.audioTotoUrl) {
+            setTimeout(() => {
+                try { new Audio(data.target.audioTotoUrl).play().catch(() => { }); } catch { }
+            }, 400);
+        }
     }, []);
 
     // Start game
@@ -195,8 +202,9 @@ export default function TreasureHunt() {
         if (item.isTarget) {
             setTapResult('correct');
             sfx.playCorrect();
-            if (item.word.audioTotoUrl) {
-                try { new Audio(item.word.audioTotoUrl).play().catch(() => { }); } catch { }
+            // Play English audio on correct answer
+            if (item.word.audioEnglishUrl) {
+                try { new Audio(item.word.audioEnglishUrl).play().catch(() => { }); } catch { }
             }
             const timeBonus = Math.round(timeLeft * 2);
             const xp = 30 + timeBonus;
