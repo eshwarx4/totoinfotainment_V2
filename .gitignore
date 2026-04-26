@@ -30,3 +30,8 @@ dist-ssr
 
 # V1 (kept locally only, not tracked)
 V1/
+
+# Capacitor Android build artifacts
+android/app/build/
+android/.gradle/
+android/local.properties
