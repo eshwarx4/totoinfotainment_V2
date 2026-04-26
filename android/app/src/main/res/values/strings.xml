@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Toto Infotainment</string>
+    <string name="title_activity_main">Toto Infotainment</string>
+    <string name="package_name">com.toto.infotainment</string>
+    <string name="custom_url_scheme">com.toto.infotainment</string>
+</resources>
