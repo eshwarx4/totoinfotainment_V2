@@ -386,6 +386,9 @@ export default function LearnTab() {
               { id: '770e8400-e29b-41d4-a716-446655440005', title: 'Water Cycle', emoji: '🔄', slides: 3 },
               { id: '770e8400-e29b-41d4-a716-446655440006', title: 'Photosynthesis', emoji: '☀️', slides: 3 },
               { id: '770e8400-e29b-41d4-a716-446655440007', title: 'Seasons', emoji: '🍂', slides: 3 },
+              { id: 'concept-cooking-rice', title: 'Cooking Rice', emoji: '🍚', slides: 3 },
+              { id: 'concept-butterfly-life', title: "The Butterfly's Life", emoji: '🦋', slides: 3 },
+              { id: 'concept-honeybee', title: 'The Busy Honeybee', emoji: '🐝', slides: 3 },
             ].map(concept => {
               const isCompleted = (game.completedConcepts || []).includes(concept.id);
               return (

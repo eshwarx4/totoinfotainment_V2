@@ -4,6 +4,7 @@ import { ArrowLeft, Volume2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { fetchConceptSlides } from '@/lib/supabaseQueries';
 import type { ConceptSlideRow } from '@/lib/supabaseQueries';
+import { getLocalConcept, LOCAL_CONCEPTS } from '@/data/concepts';
 
 const CONCEPT_NAMES: Record<string, string> = {
     '770e8400-e29b-41d4-a716-446655440001': 'Evaporation',
@@ -13,6 +14,7 @@ const CONCEPT_NAMES: Record<string, string> = {
     '770e8400-e29b-41d4-a716-446655440005': 'Water Cycle',
     '770e8400-e29b-41d4-a716-446655440006': 'Photosynthesis',
     '770e8400-e29b-41d4-a716-446655440007': 'Seasons',
+    ...Object.fromEntries(LOCAL_CONCEPTS.map(c => [c.id, c.title])),
 };
 
 export default function ConceptViewer() {
@@ -29,6 +31,12 @@ export default function ConceptViewer() {
 
     useEffect(() => {
         if (!conceptId) return;
+        const local = getLocalConcept(conceptId);
+        if (local) {
+            setSlides(local.slides);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         fetchConceptSlides(conceptId)
             .then(data => setSlides(data))
