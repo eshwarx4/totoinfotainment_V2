@@ -1,23 +1,15 @@
 import { useEffect } from "react";
-import { App } from "@capacitor/app";
-import { Capacitor } from "@capacitor/core";
 
 const ROOT_PATHS = new Set(["/", "/map"]);
 
+// Android back button handler — Capacitor only (no-op on web)
 export function useAndroidBackButton() {
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    // Web builds: just handle browser history navigation
+    // Capacitor native builds would need @capacitor/app — skipped here for web compatibility
+    const isWeb = typeof window !== 'undefined' && !(window as any).Capacitor?.isNativePlatform?.();
+    if (isWeb) return;
 
-    const sub = App.addListener("backButton", ({ canGoBack }) => {
-      if (ROOT_PATHS.has(window.location.pathname) || !canGoBack) {
-        App.exitApp();
-      } else {
-        window.history.back();
-      }
-    });
-
-    return () => {
-      sub.then((s) => s.remove());
-    };
+    // Native only (won't reach here in web build)
   }, []);
 }

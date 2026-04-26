@@ -3,6 +3,9 @@ import { WordItem } from '@/types/content';
 import { GameRoundResult } from '@/types/game';
 import { shuffle } from '@/lib/gameUtils';
 import { getEmojiImageUrl } from '@/lib/emojiImages';
+import { useGameSFX } from '@/hooks/useGameSFX';
+import { useTotoLabel } from '@/hooks/useTotoLabel';
+
 
 interface Card {
   id: string;
@@ -24,21 +27,28 @@ export default function MemoryMatch({ words, onComplete }: Props) {
   const [matched, setMatched] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
   const [canFlip, setCanFlip] = useState(true);
+  const sfx = useGameSFX();
+  const { getTotoLabel } = useTotoLabel();
 
-  const pairWords = words.slice(0, 3);
+
+  // Use up to 4 pairs (all level words, max 4)
+  const pairWords = words.slice(0, 4);
   const totalPairs = pairWords.length;
 
   useEffect(() => {
     const cardPairs: Card[] = [];
     pairWords.forEach((word) => {
       cardPairs.push({ id: `${word.id}-img`, pairId: word.id, type: 'image', content: word.english, imageUrl: word.imageUrl, category: word.category });
-      cardPairs.push({ id: `${word.id}-word`, pairId: word.id, type: 'word', content: word.toto || word.english });
+      cardPairs.push({ id: `${word.id}-word`, pairId: word.id, type: 'word', content: getTotoLabel(word) });
+
     });
     setCards(shuffle(cardPairs));
   }, []);
 
   const handleFlip = (index: number) => {
     if (!canFlip || flipped.includes(index) || matched.includes(cards[index].pairId)) return;
+
+    sfx.playSnap(); // flip sound
 
     const newFlipped = [...flipped, index];
     setFlipped(newFlipped);
@@ -52,6 +62,8 @@ export default function MemoryMatch({ words, onComplete }: Props) {
       const card2 = cards[second];
 
       if (card1.pairId === card2.pairId && card1.type !== card2.type) {
+        // Match found!
+        sfx.playCorrect();
         const newMatched = [...matched, card1.pairId];
         setMatched(newMatched);
         setFlipped([]);
@@ -67,10 +79,15 @@ export default function MemoryMatch({ words, onComplete }: Props) {
           }, 600);
         }
       } else {
-        setTimeout(() => { setFlipped([]); setCanFlip(true); }, 800);
+        // Mismatch
+        sfx.playWrong();
+        setTimeout(() => { setFlipped([]); setCanFlip(true); }, 500); // reduced from 800ms → 500ms
       }
     }
   };
+
+  // Determine grid columns based on card count
+  const gridCols = pairWords.length <= 3 ? 'grid-cols-3' : 'grid-cols-4';
 
   return (
     <div className="animate-fade-in">
@@ -101,7 +118,7 @@ export default function MemoryMatch({ words, onComplete }: Props) {
       </div>
 
       {/* Card grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`grid ${gridCols} gap-3`}>
         {cards.map((card, index) => {
           const isFlipped = flipped.includes(index);
           const isMatched = matched.includes(card.pairId);
@@ -117,8 +134,8 @@ export default function MemoryMatch({ words, onComplete }: Props) {
               {!showFace ? (
                 /* Card back */
                 <div className={`w-full h-full flex items-center justify-center rounded-2xl ${isMatched
-                    ? 'bg-green-50 border-2 border-green-400'
-                    : 'bg-gradient-to-br from-game-primary to-emerald-600 shadow-md'
+                  ? 'bg-green-50 border-2 border-green-400'
+                  : 'bg-gradient-to-br from-game-primary to-emerald-600 shadow-md'
                   }`}>
                   {isMatched
                     ? <span className="text-3xl">✅</span>

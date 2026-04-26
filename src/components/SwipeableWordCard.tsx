@@ -3,6 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { WordItem } from '@/types/content';
 import { AudioPlayer } from './AudioPlayer';
 import { ChevronUp, Heart, X } from 'lucide-react';
+import { useTotoLabel } from '@/hooks/useTotoLabel';
+
 
 interface SwipeableWordCardProps {
   word: WordItem;
@@ -23,6 +25,7 @@ export const SwipeableWordCard = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
+  const { getTotoLabel } = useTotoLabel();
 
   const handleDragStart = (clientX: number, clientY: number) => {
     setIsDragging(true);
@@ -102,7 +105,8 @@ export const SwipeableWordCard = ({
           />
 
           <div className="text-center space-y-3">
-            <h3 className="text-4xl font-bold text-primary">{word.toto}</h3>
+            <h3 className="text-4xl font-bold text-primary">{getTotoLabel(word)}</h3>
+
             {showTransliteration && word.transliteration && word.transliteration.trim() !== '' && (
               <p className="text-lg text-muted-foreground italic">({word.transliteration})</p>
             )}

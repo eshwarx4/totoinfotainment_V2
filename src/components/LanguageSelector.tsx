@@ -7,9 +7,16 @@ interface LanguageSelectorProps {
   onSelect?: () => void;
 }
 
-const languages: { code: Language; name: string; nativeName: string; flag: string }[] = [
+const languages: { code: Language; name: string; nativeName: string; flag: string; desc?: string }[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
   { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
+  {
+    code: 'tb',
+    name: 'Toto in Bengali Script',
+    nativeName: 'টোটো ভাষা · Toto Language',
+    flag: '🧒',
+    desc: 'বাংলা লিপিতে টোটো শব্দ · Toto words in Bengali script',
+  },
 ];
 
 export function LanguageSelector({ variant = 'card', showTitle = true, onSelect }: LanguageSelectorProps) {
@@ -27,11 +34,10 @@ export function LanguageSelector({ variant = 'card', showTitle = true, onSelect 
           <button
             key={lang.code}
             onClick={() => handleSelect(lang.code)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-              language === lang.code
-                ? 'bg-game-primary text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${language === lang.code
+              ? 'bg-game-primary text-white shadow-md'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
           >
             <span className="text-lg">{lang.flag}</span>
             <span className="font-semibold text-sm">{lang.nativeName}</span>
@@ -58,16 +64,15 @@ export function LanguageSelector({ variant = 'card', showTitle = true, onSelect 
           <button
             key={lang.code}
             onClick={() => handleSelect(lang.code)}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-              language === lang.code
-                ? 'bg-game-primary/10 ring-2 ring-game-primary'
-                : 'bg-white hover:bg-gray-50 shadow-sm'
-            }`}
+            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${language === lang.code
+              ? 'bg-game-primary/10 ring-2 ring-game-primary'
+              : 'bg-white hover:bg-gray-50 shadow-sm'
+              }`}
           >
             <span className="text-3xl">{lang.flag}</span>
             <div className="flex-1 text-left">
               <p className="font-bold text-base">{lang.nativeName}</p>
-              <p className="text-sm text-muted-foreground">{lang.name}</p>
+              <p className="text-sm text-muted-foreground">{lang.desc ?? lang.name}</p>
             </div>
             {language === lang.code && (
               <div className="w-8 h-8 rounded-full bg-game-primary flex items-center justify-center">

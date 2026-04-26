@@ -95,13 +95,13 @@ export default function LevelIntro() {
         <h2 className="text-3xl font-black text-white drop-shadow-md mb-1">
           {levelWords.length} words to learn!
         </h2>
-        <p className="text-white/70 text-sm font-medium mb-6">
+        <p className="text-gray-600 text-sm font-medium mb-6">
           3 games: Tap the Image → Memory Match → Speed Challenge
         </p>
 
         {/* Word preview cards */}
         <div className="w-full max-w-sm mb-8">
-          <h3 className="text-xs font-bold text-white/60 mb-3 text-center tracking-widest uppercase">
+          <h3 className="text-xs font-bold text-gray-500 mb-3 text-center tracking-widest uppercase">
             Words in this level
           </h3>
           <div className="grid grid-cols-3 gap-3">
@@ -118,7 +118,6 @@ export default function LevelIntro() {
                   />
                 </div>
                 <p className="text-xs font-bold text-gray-800 truncate">{word.english}</p>
-                <p className="text-[10px] text-gray-500 truncate">{word.toto}</p>
               </div>
             ))}
           </div>

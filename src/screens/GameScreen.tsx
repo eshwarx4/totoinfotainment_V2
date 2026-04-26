@@ -13,6 +13,7 @@ import MemoryMatch from '@/components/games/MemoryMatch';
 import SpeedChallenge from '@/components/games/SpeedChallenge';
 import { X } from 'lucide-react';
 
+
 const GAME_NAMES = ['', 'Tap the Image', 'Memory Match', 'Speed Challenge'];
 const GAME_EMOJIS = ['', '👆', '🧠', '⚡'];
 
@@ -52,6 +53,7 @@ export default function GameScreen() {
 
   // Store results from each game
   const [gameResults, setGameResults] = useState<Record<number, GameRoundResult>>({});
+
 
   useEffect(() => {
     async function loadWords() {
@@ -168,8 +170,8 @@ export default function GameScreen() {
               <div key={g} className="h-2 flex-1 rounded-full overflow-hidden bg-gray-200">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ease-out ${g < gameIndex ? `bg-gradient-to-r ${worldConfig.bgGradient}`
-                      : g === gameIndex ? `bg-gradient-to-r ${worldConfig.bgGradient} opacity-70`
-                        : ''
+                    : g === gameIndex ? `bg-gradient-to-r ${worldConfig.bgGradient} opacity-70`
+                      : ''
                     }`}
                   style={{ width: g <= gameIndex ? '100%' : '0%' }}
                 />

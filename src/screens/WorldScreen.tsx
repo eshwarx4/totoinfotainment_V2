@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGame } from '@/state/GameContext';
 import { getWorldConfig, CONCEPT_STORY_UNLOCK_AFTER, FOLK_STORY_UNLOCK_AFTER } from '@/config/worlds';
 import { WorldId } from '@/types/game';
-import { ArrowLeft, Star, Lock, BookOpen, Scroll, Award, Play, Trophy, Sparkles } from 'lucide-react';
+import { ArrowLeft, Star, Lock, BookOpen, Scroll, Trophy, Sparkles, ChevronRight } from 'lucide-react';
 
 // Zigzag positions for levels (same as CandyMap)
 const LEVEL_POSITIONS = [
@@ -32,244 +32,206 @@ export default function WorldScreen() {
   const levels = worldState.levels;
 
   return (
-    <div className="min-h-screen pb-24 screen-enter candy-world-detail">
-      {/* Gradient Background */}
-      <div className={`fixed inset-0 bg-gradient-to-b ${worldConfig.bgGradient} -z-10`} />
+    <div className={`min-h-screen pb-8 screen-enter bg-gradient-to-b ${worldConfig.bgGradient}`}>
 
-      {/* Floating particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-5">
-        <div className="candy-particle candy-particle-1" style={{ top: '15%', left: '10%' }} />
-        <div className="candy-particle candy-particle-2" style={{ top: '45%', right: '15%' }} />
-        <div className="candy-particle candy-particle-3" style={{ bottom: '25%', left: '20%' }} />
-      </div>
-
-      {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/20 border-b border-white/10">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/map')}
-              className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Map
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-white text-sm font-bold">{progress.totalStars}/{progress.maxStars}</span>
-              </div>
-            </div>
+      {/* Header — matches LevelIntro style */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/10 border-b border-white/20">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={() => navigate('/map')}
+            className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-semibold text-sm
+                       bg-black/10 backdrop-blur-sm px-3 py-1.5 rounded-full transition-all active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Map
+          </button>
+          <div className="bg-black/10 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
+            <span className="text-gray-800 text-sm font-bold">{progress.totalStars}/{progress.maxStars}</span>
           </div>
         </div>
       </div>
 
       {/* World Title Card */}
-      <div className="max-w-lg mx-auto px-4 pt-4">
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">{worldConfig.icon}</div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">{worldConfig.name}</h1>
-              <p className="text-white/70 text-sm">{worldConfig.description}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                        i <= progress.completedLevels ? 'bg-green-400' : 'bg-white/30'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-white/60 text-xs ml-1">{progress.completedLevels}/5</span>
-              </div>
+      <div className="max-w-lg mx-auto px-4 pt-5">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-4 border border-white/80 flex items-center gap-4 shadow-md">
+          <div className="text-4xl shrink-0">{worldConfig.icon}</div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-extrabold text-gray-800 truncate">{worldConfig.name}</h1>
+            <p className="text-gray-500 text-xs mt-0.5 truncate">{worldConfig.description}</p>
+            {/* Progress dots */}
+            <div className="flex items-center gap-1.5 mt-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className={`h-2 rounded-full transition-all duration-300 ${i <= progress.completedLevels ? 'w-5 bg-green-500' : 'w-2 bg-gray-300'
+                    }`}
+                />
+              ))}
+              <span className="text-gray-500 text-xs ml-1">{progress.completedLevels}/5</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3D Level Path */}
-      <div className="max-w-lg mx-auto px-4 mt-6">
-        <div className="relative" style={{ height: '500px' }}>
-          {/* SVG Path connecting levels */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            {/* Path shadow */}
-            <path
-              d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
-              fill="none"
-              stroke="rgba(0,0,0,0.3)"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-            {/* Main path */}
-            <path
-              d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
-              fill="none"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            {/* Dotted center */}
-            <path
-              d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
-              fill="none"
-              stroke="rgba(255,255,255,0.5)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeDasharray="3 5"
-            />
+      {/* ===== LEVEL PATH ===== */}
+      <div className="max-w-lg mx-auto px-4 mt-4">
+        <div className="relative" style={{ height: '460px' }}>
+
+          {/* SVG path connecting levels */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {/* Road shadow */}
+            <path d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
+              fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="6" strokeLinecap="round" />
+            {/* Road surface */}
+            <path d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
+              fill="none" stroke="rgba(200,170,130,0.7)" strokeWidth="4.5" strokeLinecap="round" />
+            {/* Center dashes */}
+            <path d="M 30,82 Q 50,74 70,66 Q 50,58 30,50 Q 50,42 70,34 Q 60,26 50,18"
+              fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="3 5" />
           </svg>
 
           {/* Level Nodes */}
           {[1, 2, 3, 4, 5].map((levelNum, idx) => {
             const level = levels[levelNum];
-            const isPlayable = level.unlocked && !level.completed;
             const isCompleted = level.completed;
+            const isPlayable = level.unlocked && !level.completed;
             const isLocked = !level.unlocked;
             const pos = LEVEL_POSITIONS[idx];
 
             return (
               <button
                 key={levelNum}
-                onClick={() => {
-                  if (level.unlocked) navigate(`/level/${wid}/${levelNum}/intro`);
-                }}
+                onClick={() => { if (level.unlocked) navigate(`/level/${wid}/${levelNum}/intro`); }}
                 disabled={isLocked}
-                className="absolute candy-level-wrapper"
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                }}
+                className="absolute focus:outline-none"
+                style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
               >
-                {/* Glow for current */}
+                {/* Pulse ring for current playable level */}
                 {isPlayable && (
-                  <div className="absolute inset-0 candy-node-glow" style={{ width: 80, height: 80, transform: 'translate(-12px, -12px)' }} />
+                  <span className="absolute rounded-full animate-ping"
+                    style={{
+                      background: 'rgba(59,130,246,0.35)',
+                      width: 62, height: 62,
+                      top: -7, left: -7,
+                      animationDuration: '1.4s',
+                    }} />
                 )}
 
-                {/* Node */}
-                <div className={`candy-node ${
-                  isPlayable ? 'candy-node-current' :
-                  isCompleted ? 'candy-node-completed' :
-                  'candy-node-locked'
-                }`}>
+                {/* Node circle */}
+                <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-extrabold text-base shadow-lg transition-transform active:scale-90 border-2 ${isLocked
+                  ? 'bg-gray-400/70 border-gray-300 text-gray-200'
+                  : isCompleted
+                    ? 'bg-white/90 border-white text-emerald-600'
+                    : 'bg-white border-white/80 text-blue-600 shadow-xl'
+                  }`}>
                   {isLocked ? (
-                    <Lock className="w-5 h-5 text-gray-400" />
-                  ) : isPlayable ? (
-                    <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+                    <Lock className="w-4 h-4" />
                   ) : (
-                    <span className="text-lg font-bold">{levelNum}</span>
+                    <span>{levelNum}</span>
                   )}
-                  <div className="candy-node-highlight" />
-                  <div className="candy-node-shadow" />
                 </div>
 
-                {/* Stars */}
+                {/* Stars under completed node */}
                 {isCompleted && (
-                  <div className="candy-stars mt-1">
+                  <div className="flex justify-center gap-0.5 mt-1">
                     {[1, 2, 3].map((s) => (
                       <Star
                         key={s}
-                        className={`w-3.5 h-3.5 ${
-                          s <= level.stars
-                            ? 'fill-yellow-400 text-yellow-500'
-                            : 'fill-gray-400 text-gray-500'
-                        }`}
+                        className={`w-3 h-3 ${s <= level.stars ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-300 text-gray-300'}`}
                       />
                     ))}
                   </div>
                 )}
 
-                {/* Label */}
-                <div className={`candy-level-label ${isLocked ? 'opacity-50' : ''}`}>
+                {/* Label tag */}
+                <div className={`mt-0.5 text-center text-[10px] font-bold px-2 py-0.5 rounded-full ${isPlayable
+                  ? 'bg-blue-500 text-white'
+                  : isCompleted
+                    ? 'bg-white/80 text-green-700'
+                    : 'bg-black/25 text-white'
+                  }`}>
                   {isPlayable ? 'PLAY!' : `Lv.${levelNum}`}
                 </div>
               </button>
             );
           })}
-
-          {/* Story markers */}
-          {/* Concept Story after Level 2 */}
-          <button
-            onClick={() => worldState.conceptStoryUnlocked && navigate(`/story/${wid}/concept`)}
-            disabled={!worldState.conceptStoryUnlocked}
-            className="absolute"
-            style={{ left: '85%', top: '58%', transform: 'translate(-50%, -50%)' }}
-          >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-              worldState.conceptStoryUnlocked
-                ? 'bg-blue-500 shadow-lg shadow-blue-500/40'
-                : 'bg-white/20'
-            }`}>
-              <BookOpen className={`w-6 h-6 ${worldState.conceptStoryUnlocked ? 'text-white' : 'text-white/50'}`} />
-            </div>
-            {worldState.conceptStoryCompleted && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-xs">✓</span>
-              </div>
-            )}
-          </button>
-
-          {/* Folk Story after Level 4 */}
-          <button
-            onClick={() => worldState.folkStoryUnlocked && navigate(`/story/${wid}/folk`)}
-            disabled={!worldState.folkStoryUnlocked}
-            className="absolute"
-            style={{ left: '15%', top: '26%', transform: 'translate(-50%, -50%)' }}
-          >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-              worldState.folkStoryUnlocked
-                ? 'bg-purple-500 shadow-lg shadow-purple-500/40'
-                : 'bg-white/20'
-            }`}>
-              <Scroll className={`w-6 h-6 ${worldState.folkStoryUnlocked ? 'text-white' : 'text-white/50'}`} />
-            </div>
-            {worldState.folkStoryCompleted && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-xs">✓</span>
-              </div>
-            )}
-          </button>
         </div>
       </div>
 
-      {/* Cultural Reward Card */}
-      <div className="max-w-lg mx-auto px-4 mt-4">
+      {/* ===== UNLOCKABLES — clean list cards ===== */}
+      <div className="max-w-lg mx-auto px-4 mt-2 space-y-3">
+
+        {/* Concept Story */}
+        <button
+          onClick={() => worldState.conceptStoryUnlocked && navigate(`/story/${wid}/concept`)}
+          disabled={!worldState.conceptStoryUnlocked}
+          className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all active:scale-[0.98] border ${worldState.conceptStoryUnlocked
+            ? 'bg-white/80 border-white/60 backdrop-blur-sm shadow-sm'
+            : 'bg-black/20 border-black/15'
+            }`}
+        >
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${worldState.conceptStoryUnlocked ? 'bg-blue-500 shadow-md' : 'bg-white/15'
+            }`}>
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className={`text-sm font-bold truncate ${worldState.conceptStoryUnlocked ? 'text-gray-800' : 'text-white/80'}`}>
+              Story Concept
+            </p>
+            <p className={`text-xs truncate ${worldState.conceptStoryUnlocked ? 'text-gray-500' : 'text-white/55'}`}>
+              {worldState.conceptStoryUnlocked ? 'Unlocked ✓' : `Complete Level ${CONCEPT_STORY_UNLOCK_AFTER} to unlock`}
+            </p>
+          </div>
+          {worldState.conceptStoryUnlocked && <ChevronRight className="w-4 h-4 text-white/70 shrink-0" />}
+        </button>
+
+        {/* Folk Story */}
+        <button
+          onClick={() => worldState.folkStoryUnlocked && navigate(`/story/${wid}/folk`)}
+          disabled={!worldState.folkStoryUnlocked}
+          className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all active:scale-[0.98] border ${worldState.folkStoryUnlocked
+            ? 'bg-white/80 border-white/60 backdrop-blur-sm shadow-sm'
+            : 'bg-black/20 border-black/15'
+            }`}
+        >
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${worldState.folkStoryUnlocked ? 'bg-purple-500 shadow-md' : 'bg-white/15'
+            }`}>
+            <Scroll className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className={`text-sm font-bold truncate ${worldState.folkStoryUnlocked ? 'text-gray-800' : 'text-white/80'}`}>
+              Folk Story
+            </p>
+            <p className={`text-xs truncate ${worldState.folkStoryUnlocked ? 'text-gray-500' : 'text-white/55'}`}>
+              {worldState.folkStoryUnlocked ? 'Unlocked ✓' : `Complete Level ${FOLK_STORY_UNLOCK_AFTER} to unlock`}
+            </p>
+          </div>
+          {worldState.folkStoryUnlocked && <ChevronRight className="w-4 h-4 text-white/70 shrink-0" />}
+        </button>
+
+        {/* Cultural Insight */}
         <button
           onClick={() => worldState.culturalUnlocked && navigate(`/cultural/${wid}`)}
           disabled={!worldState.culturalUnlocked}
-          className={`w-full rounded-2xl p-5 text-center transition-all ${
-            worldState.culturalUnlocked
-              ? 'bg-gradient-to-r from-yellow-500 to-amber-500 shadow-lg shadow-amber-500/30'
-              : 'bg-white/10'
-          }`}
+          className={`w-full rounded-2xl p-4 flex items-center gap-3 transition-all active:scale-[0.98] ${worldState.culturalUnlocked
+            ? 'bg-gradient-to-r from-yellow-400/90 to-amber-500/90 shadow-lg shadow-amber-500/30 border border-yellow-300/50'
+            : 'bg-black/20 border border-black/15'
+            }`}
         >
-          <div className="flex items-center justify-center gap-3">
-            {worldState.culturalUnlocked ? (
-              <>
-                <Trophy className="w-8 h-8 text-white" />
-                <div className="text-left">
-                  <h3 className="font-bold text-white">Cultural Insight Unlocked!</h3>
-                  <p className="text-white/80 text-xs">Tap to discover the culture!</p>
-                </div>
-                <Sparkles className="w-6 h-6 text-white/80" />
-              </>
-            ) : (
-              <>
-                <Lock className="w-6 h-6 text-white/50" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-white/70">Cultural Insight</h3>
-                  <p className="text-white/50 text-xs">Complete all 5 levels to unlock</p>
-                </div>
-              </>
-            )}
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${worldState.culturalUnlocked ? 'bg-white/25' : 'bg-white/15'
+            }`}>
+            <Trophy className={`w-5 h-5 ${worldState.culturalUnlocked ? 'text-white' : 'text-white/40'}`} />
           </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className={`text-sm font-bold truncate ${worldState.culturalUnlocked ? 'text-white' : 'text-white/80'}`}>
+              Cultural Insight
+            </p>
+            <p className={`text-xs truncate ${worldState.culturalUnlocked ? 'text-white/85' : 'text-white/55'}`}>
+              {worldState.culturalUnlocked ? 'Tap to discover the culture!' : 'Complete all 5 levels to unlock'}
+            </p>
+          </div>
+          {worldState.culturalUnlocked && <Sparkles className="w-5 h-5 text-white/80 shrink-0" />}
         </button>
       </div>
     </div>

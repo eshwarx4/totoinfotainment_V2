@@ -39,8 +39,9 @@ export function buildLevelWords(
   if (worldWords.length === 0) return [];
 
   // Calculate how many words previous levels consumed
-  const wordOffsets = [0, 3, 7, 10, 13]; // cumulative: L1=3, L2=4, L3=3new, L4=3new, L5=0new
-  const newWordsPerLevel = [3, 4, 3, 3, 0];
+  // L1=4 new, L2=4 new, L3=4 new, L4=4 new, L5=review only
+  const wordOffsets = [0, 4, 8, 12, 16]; // cumulative
+  const newWordsPerLevel = [4, 4, 4, 4, 0];
 
   const startIdx = wordOffsets[levelNum - 1] || 0;
   const newCount = newWordsPerLevel[levelNum - 1] || 0;

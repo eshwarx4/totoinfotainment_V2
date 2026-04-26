@@ -4,6 +4,9 @@ import { GameRoundResult } from '@/types/game';
 import { shuffle, generateOptions } from '@/lib/gameUtils';
 import { getEmojiImageUrl } from '@/lib/emojiImages';
 import { Volume2 } from 'lucide-react';
+import { useGameSFX } from '@/hooks/useGameSFX';
+import { useTotoLabel } from '@/hooks/useTotoLabel';
+
 
 interface Props {
   words: WordItem[];
@@ -17,6 +20,9 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [correct, setCorrect] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const sfx = useGameSFX();
+  const { getTotoLabel } = useTotoLabel();
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -64,6 +70,7 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
     if (isCorrect) {
       setCorrect(prev => prev + 1);
       setFeedback('correct');
+      sfx.playCorrect();
       // Play English audio on correct answer
       if (currentWord.audioEnglish) {
         try {
@@ -75,6 +82,7 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
       }
     } else {
       setFeedback('wrong');
+      sfx.playWrong();
     }
 
     setTimeout(() => {
@@ -117,13 +125,14 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
             <Volume2 className="w-5 h-5 text-game-primary" />
           </button>
           <div className="text-left">
-            <span className="text-lg font-bold block leading-tight">{currentWord.toto}</span>
+            <span className="text-lg font-bold block leading-tight">{getTotoLabel(currentWord)}</span>
             <span className="text-xs text-muted-foreground">{currentWord.english}</span>
+
           </div>
         </div>
       </div>
 
-      {/* Image options grid */}
+      {/* Image options grid — images only, no text label */}
       <div className="grid grid-cols-2 gap-3">
         {options.map(option => {
           const isSelected = selected === option.id;
@@ -141,6 +150,7 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
                   'card-game active:scale-95'
                 }`}
             >
+              {/* Image only — no text label */}
               <div className="aspect-square bg-muted">
                 <img
                   src={option.imageUrl}
@@ -149,9 +159,6 @@ export default function TapTheImage({ words, allWords, onComplete }: Props) {
                   loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).src = getEmojiImageUrl(option.english, option.category); }}
                 />
-              </div>
-              <div className="p-2 text-center bg-white">
-                <p className="text-sm font-bold truncate">{option.english}</p>
               </div>
               {showCorrect && (
                 <div className="absolute inset-0 bg-game-correct/20 flex items-center justify-center">

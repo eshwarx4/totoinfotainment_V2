@@ -37,6 +37,10 @@ export interface GameState {
   learnedWords: string[];
   completedStories: string[];
   completedConcepts: string[];
+  // Shop
+  purchasedItems: string[];    // shop item IDs owned
+  equippedTag: string | null;  // tag ID currently equipped (shown in leaderboard)
+  equippedAvatar: string | null; // overrides playerAvatar if set
 }
 
 // Scoring
@@ -120,6 +124,9 @@ export function createDefaultGameState(userId?: string, name?: string): GameStat
     learnedWords: [],
     completedStories: [],
     completedConcepts: [],
+    purchasedItems: [],
+    equippedTag: null,
+    equippedAvatar: null,
   };
 }
 

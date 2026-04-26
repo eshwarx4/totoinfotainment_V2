@@ -4,6 +4,7 @@ import { GameRoundResult } from '@/types/game';
 import { shuffle, generateOptions } from '@/lib/gameUtils';
 import { getEmojiImageUrl } from '@/lib/emojiImages';
 import { Timer, Zap } from 'lucide-react';
+import { useGameSFX } from '@/hooks/useGameSFX';
 
 interface Props {
   words: WordItem[];
@@ -23,14 +24,23 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const sfx = useGameSFX();
 
-  // Build a shuffled question queue from words (repeat to fill time)
+  // Build a non-repeating shuffled question queue from words
+  // Words cycle through once, then reshuffle — no immediate repeats
   const questionQueue = useRef<WordItem[]>([]);
 
   useEffect(() => {
-    // Create repeating queue
-    const repeated = [...words, ...words, ...words, ...words]; // enough for 30s
-    questionQueue.current = shuffle(repeated);
+    // Create a queue that goes through words once, then again if time permits
+    // But use two different shuffles so they don't repeat consecutively
+    const shuffle1 = shuffle([...words]);
+    const shuffle2 = shuffle([...words]);
+    // Ensure last of shuffle1 !== first of shuffle2 to avoid adjacent repeats
+    if (shuffle1.length > 0 && shuffle2.length > 0 && shuffle1[shuffle1.length - 1].id === shuffle2[0].id) {
+      // Swap first two of shuffle2
+      if (shuffle2.length > 1) [shuffle2[0], shuffle2[1]] = [shuffle2[1], shuffle2[0]];
+    }
+    questionQueue.current = [...shuffle1, ...shuffle2];
   }, [words]);
 
   const currentWord = questionQueue.current[round];
@@ -59,6 +69,10 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
           setGameOver(true);
           return 0;
         }
+        // Play tick SFX in last 5 seconds
+        if (prev <= 6 && prev > 1) {
+          sfx.playTick();
+        }
         return prev - 1;
       });
     }, 1000);
@@ -69,6 +83,7 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
   // End game when time runs out
   useEffect(() => {
     if (gameOver && gameStarted) {
+      sfx.playGameOver();
       setTimeout(() => {
         onComplete({
           correct,
@@ -88,8 +103,10 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
     if (isCorrect) {
       setCorrect(prev => prev + 1);
       setFeedback('correct');
+      sfx.playCorrect();
     } else {
       setFeedback('wrong');
+      sfx.playWrong();
     }
 
     // Quick transition
@@ -160,12 +177,13 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
         </div>
       </div>
 
-      {/* Options */}
+      {/* Options — images only, no text label */}
       {options.length > 0 ? (
         <div className="grid grid-cols-2 gap-2.5">
           {options.map(option => {
             const isCorrectOption = option.id === currentWord.id;
             const showCorrect = feedback && isCorrectOption;
+            const isSelected = feedback && option.id === currentWord.id === false;
 
             return (
               <button
@@ -176,6 +194,7 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
                   'bg-white border border-gray-100 shadow-sm active:scale-95'
                   }`}
               >
+                {/* Image only — no text label */}
                 <div className="aspect-square bg-gray-50 relative">
                   <img
                     src={option.imageUrl}
@@ -188,9 +207,6 @@ export default function SpeedChallenge({ words, allWords, onComplete }: Props) {
                       <span className="text-3xl">✅</span>
                     </div>
                   )}
-                </div>
-                <div className="py-1.5 px-2 bg-white">
-                  <p className="text-xs font-bold truncate text-center">{option.english}</p>
                 </div>
               </button>
             );

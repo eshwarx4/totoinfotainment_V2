@@ -135,34 +135,98 @@ function IsoBuilding({ kind, x, y, scale }: { kind: BuildingKind; x: number; y: 
 function TotoparaLandscape({ worldId }: { worldId: string }) {
   const assets = WORLD_ASSETS[worldId] || WORLD_ASSETS.forest;
   const riverPath = worldId === 'farm'
-    ? 'M-5,85 C18,75 28,95 48,83 C68,72 77,90 105,78'
-    : 'M-5,94 C20,88 38,99 58,91 C76,84 88,92 105,86';
+    ? 'M-8,78 C18,64 36,87 56,71 C75,56 83,72 108,57'
+    : worldId === 'forest'
+      ? 'M-5,92 C20,88 38,99 58,91 C76,84 88,92 105,86'
+      : 'M-8,96 C20,94 36,101 58,94 C80,88 91,95 108,91';
+
+  const treeSet = worldId === 'nature'
+    ? [{ x: 8, y: 55, s: 1.05 }, { x: 91, y: 45, s: 1 }, { x: 13, y: 18, s: 0.9 }, { x: 92, y: 88, s: 0.8 }, { x: 55, y: 12, s: 0.72 }, { x: 73, y: 83, s: 0.76 }]
+    : worldId === 'village'
+      ? [{ x: 8, y: 58, s: 0.7 }, { x: 92, y: 88, s: 0.64 }]
+      : [{ x: 7, y: 55, s: 0.84 }, { x: 91, y: 45, s: 0.78 }, { x: 12, y: 18, s: 0.7 }, { x: 92, y: 88, s: 0.64 }];
 
   return (
     <g>
-      <rect x="0" y="0" width="100" height="100" fill="rgba(255,255,255,0.03)" />
-      <path d="M-5,14 C20,4 34,16 50,9 C72,0 88,10 105,3 L105,0 L-5,0Z" fill="rgba(255,255,255,0.16)" />
-      <path d={riverPath} fill="none" stroke="rgba(59,130,246,0.55)" strokeWidth="8" strokeLinecap="round" />
-      <path d={riverPath} fill="none" stroke="rgba(186,230,253,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="5 6" />
+      <rect x="0" y="0" width="100" height="100" fill="rgba(255,255,255,0.02)" />
+      <path d="M-5,13 C19,5 34,16 50,9 C72,0 89,10 105,3 L105,0 L-5,0Z" fill="rgba(232,226,208,0.18)" />
+
+      {worldId === 'forest' && (
+        <>
+          <path d="M8,67 C20,60 33,64 44,58 C54,52 66,56 77,50" fill="none" stroke="rgba(121,85,55,0.34)" strokeWidth="5" strokeLinecap="round" />
+          <ellipse cx="20" cy="74" rx="20" ry="10" fill="rgba(150,117,80,0.16)" />
+          <ellipse cx="77" cy="57" rx="18" ry="9" fill="rgba(93,101,75,0.2)" />
+        </>
+      )}
+
+      {worldId === 'farm' && (
+        <>
+          <path d={riverPath} fill="none" stroke="rgba(83,122,136,0.72)" strokeWidth="18" strokeLinecap="round" />
+          <path d={riverPath} fill="none" stroke="rgba(174,202,204,0.72)" strokeWidth="10" strokeLinecap="round" />
+          <path d={riverPath} fill="none" stroke="rgba(235,225,196,0.85)" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 7" />
+          <path d="M-6,87 C19,74 33,94 55,80 C75,67 86,82 106,67" fill="none" stroke="rgba(195,173,134,0.72)" strokeWidth="5" strokeLinecap="round" />
+          {[12, 48, 69, 94].map((x, i) => (
+            <ellipse key={x} cx={x} cy={i % 2 ? 82 : 63} rx="2.8" ry="1.3" fill="rgba(103,99,88,0.42)" />
+          ))}
+        </>
+      )}
+
+      {worldId === 'nature' && (
+        <>
+          <path d="M-5,20 C16,10 34,18 48,9 C68,-3 86,10 106,0 L106,0 L-5,0Z" fill="rgba(48,64,46,0.34)" />
+          <path d="M5,84 C22,72 31,78 45,67 C58,57 73,63 94,48" fill="none" stroke="rgba(94,75,54,0.46)" strokeWidth="4.5" strokeLinecap="round" />
+          <ellipse cx="76" cy="30" rx="22" ry="13" fill="rgba(48,67,45,0.28)" />
+          <ellipse cx="22" cy="66" rx="20" ry="14" fill="rgba(48,67,45,0.24)" />
+        </>
+      )}
+
+      {worldId === 'village' && (
+        <>
+          {[16, 25, 34, 43, 52].map((y, i) => (
+            <path key={y} d={`M-4,${y + 30} C16,${y + 22} 35,${y + 30} 54,${y + 21} C72,${y + 14} 86,${y + 20} 104,${y + 12}`} fill="none" stroke={i % 2 ? 'rgba(126,96,54,0.42)' : 'rgba(176,142,74,0.48)'} strokeWidth="4.2" strokeLinecap="round" />
+          ))}
+          <path d="M6,86 L28,73 L53,80 L78,63 L101,70" fill="none" stroke="rgba(89,75,54,0.42)" strokeWidth="3" strokeLinecap="round" />
+        </>
+      )}
+
+      {worldId === 'bodyLand' && (
+        <>
+          <ellipse cx="50" cy="55" rx="34" ry="24" fill="rgba(102,95,88,0.2)" />
+          <ellipse cx="50" cy="55" rx="20" ry="12" fill="rgba(209,201,184,0.17)" />
+          <path d="M21,81 C36,70 38,61 51,55 C65,48 72,36 85,24" fill="none" stroke="rgba(95,82,68,0.42)" strokeWidth="4.2" strokeLinecap="round" />
+          {[35, 43, 57, 65].map((x, i) => (
+            <ellipse key={x} cx={x} cy={i % 2 ? 48 : 61} rx="3.4" ry="1.5" fill="rgba(83,80,73,0.42)" />
+          ))}
+        </>
+      )}
+
+      {worldId !== 'farm' && (
+        <>
+          <path d={riverPath} fill="none" stroke="rgba(88,124,135,0.42)" strokeWidth="7" strokeLinecap="round" />
+          <path d={riverPath} fill="none" stroke="rgba(198,215,211,0.45)" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="5 6" />
+        </>
+      )}
+
       <path d="M0,96 C16,91 28,95 43,91 C62,86 80,90 100,82 L100,100 L0,100Z" fill="rgba(120,83,54,0.12)" />
-      <path d="M0,88 L17,83 L31,86 L47,78 L62,81 L78,73 L100,78" fill="none" stroke="rgba(120,113,108,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3 2" />
-      <path d="M3,30 L22,24 L38,28" fill="none" stroke="rgba(120,113,108,0.55)" strokeWidth="3" strokeLinecap="round" />
-      <path d="M69,88 L85,80 L101,82" fill="none" stroke="rgba(120,113,108,0.55)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M0,88 L17,83 L31,86 L47,78 L62,81 L78,73 L100,78" fill="none" stroke="rgba(103,87,66,0.52)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3 2" />
+      <path d="M3,30 L22,24 L38,28" fill="none" stroke="rgba(103,87,66,0.5)" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M69,88 L85,80 L101,82" fill="none" stroke="rgba(103,87,66,0.5)" strokeWidth="2.6" strokeLinecap="round" />
+
       {[10, 16, 22, 77, 83, 89, 95].map((x) => (
-        <rect key={x} x={x} y={x < 40 ? 23 : 79} width="2.5" height="5" rx="0.6" fill="#d6c5ad" stroke="rgba(87,83,78,0.35)" strokeWidth="0.35" />
+        <rect key={x} x={x} y={x < 40 ? 23 : 79} width="2.2" height="4.4" rx="0.5" fill="#b9a98e" stroke="rgba(87,83,78,0.35)" strokeWidth="0.35" />
       ))}
       {assets.map((asset) => (
         <IsoBuilding key={`${asset.kind}-${asset.x}-${asset.y}`} {...asset} />
       ))}
-      {[{ x: 7, y: 55, s: 0.9 }, { x: 91, y: 45, s: 0.85 }, { x: 12, y: 18, s: 0.75 }, { x: 92, y: 88, s: 0.7 }].map((tree, index) => (
+      {treeSet.map((tree, index) => (
         <g key={index} transform={`translate(${tree.x},${tree.y}) scale(${tree.s})`}>
           <ellipse cx="0" cy="5" rx="4" ry="1.6" fill="rgba(0,0,0,0.14)" />
-          <rect x="-0.7" y="0" width="1.4" height="5" rx="0.5" fill="#7c4a2d" />
-          <circle cx="0" cy="-2" r="4" fill="#166534" />
-          <circle cx="2.2" cy="-1" r="3" fill="#22c55e" opacity="0.8" />
+          <rect x="-0.7" y="0" width="1.4" height="5" rx="0.5" fill="#735239" />
+          <circle cx="0" cy="-2" r="4" fill="#4f6649" />
+          <circle cx="2.2" cy="-1" r="3" fill="#6f8056" opacity="0.82" />
         </g>
       ))}
-      <ellipse cx="50" cy="52" rx="45" ry="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.7" strokeDasharray="1 5" />
+      <ellipse cx="50" cy="52" rx="45" ry="34" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" strokeDasharray="1 5" />
     </g>
   );
 }
@@ -229,25 +293,25 @@ interface WorldSectionProps {
 function WorldSection({ world, isUnlocked, levels, currentLevel, onLevelClick, t }: WorldSectionProps) {
   return (
     <div className={`candy-world-section ${!isUnlocked ? 'candy-world-locked' : ''}`}>
-      <div className={`candy-world-bg bg-gradient-to-b ${world.bgGradient}`}>
+      <div className={`candy-world-bg candy-world-${world.id}`}>
 
         {/* SVG Landscape + Road */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           <TotoparaLandscape worldId={world.id} />
 
           {/* Road shadow */}
-          <path d={ROAD_PATH} fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="7" strokeLinecap="round" />
+          <path d={ROAD_PATH} fill="none" stroke="rgba(64,49,36,0.28)" strokeWidth="7" strokeLinecap="round" />
           {/* Road base */}
-          <path d={ROAD_PATH} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="5.5" strokeLinecap="round" />
+          <path d={ROAD_PATH} fill="none" stroke="rgba(114,89,61,0.5)" strokeWidth="5.5" strokeLinecap="round" />
           {/* Road surface */}
-          <path d={ROAD_PATH} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="4" strokeLinecap="round" />
+          <path d={ROAD_PATH} fill="none" stroke="rgba(203,182,145,0.72)" strokeWidth="4" strokeLinecap="round" />
           {/* Road center dashes */}
-          <path d={ROAD_PATH} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeDasharray="3 4" />
+          <path d={ROAD_PATH} fill="none" stroke="rgba(118,97,70,0.52)" strokeWidth="0.9" strokeLinecap="round" strokeDasharray="3 4" />
         </svg>
 
         {/* World title banner */}
         <div className="candy-world-banner">
-          <span className="text-2xl drop-shadow-md">{world.icon}</span>
+          <span className={`candy-world-dot candy-world-dot-${world.id}`} />
           <div>
             <h3 className="font-extrabold text-white text-sm drop-shadow-sm">{world.name}</h3>
             <p className="text-white/70 text-[10px]">{world.description}</p>
@@ -339,7 +403,7 @@ export function CandyMap() {
 
       {/* Map title banner */}
       <div className="candy-map-title">
-        <h2 className="text-white font-extrabold text-lg tracking-tight">🏔️ Totopara</h2>
+        <h2 className="text-white font-extrabold text-lg tracking-tight">Totopara</h2>
         <p className="text-white/60 text-[11px]">Explore the Toto homeland</p>
       </div>
 

@@ -349,6 +349,31 @@ export function useGameState() {
     setState(DEFAULT_GAME_STATE);
   }, [state.userId]);
 
+  // === Shop ===
+
+  const purchaseShopItem = useCallback((itemId: string, cost: number): boolean => {
+    let success = false;
+    persist(prev => {
+      if ((prev.purchasedItems || []).includes(itemId)) return prev; // already owned
+      if (prev.totalCoins < cost) return prev; // not enough coins
+      success = true;
+      return {
+        ...prev,
+        totalCoins: prev.totalCoins - cost,
+        purchasedItems: [...(prev.purchasedItems || []), itemId],
+      };
+    });
+    return success;
+  }, [persist]);
+
+  const equipTag = useCallback((tagId: string | null) => {
+    persist(prev => ({ ...prev, equippedTag: tagId }));
+  }, [persist]);
+
+  const equipAvatar = useCallback((avatarEmoji: string) => {
+    persist(prev => ({ ...prev, playerAvatar: avatarEmoji, equippedAvatar: avatarEmoji }));
+  }, [persist]);
+
   // === Computed Values ===
 
   const getWorldProgress = useCallback((worldId: WorldId) => {
@@ -412,6 +437,10 @@ export function useGameState() {
     markConceptCompleted,
     updateStreak,
     resetAll,
+    // Shop
+    purchaseShopItem,
+    equipTag,
+    equipAvatar,
     // Computed
     getWorldProgress,
     getTotalProgress,

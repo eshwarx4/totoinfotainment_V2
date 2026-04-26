@@ -6,7 +6,7 @@ import { Confetti } from '@/components/effects/Confetti';
 import Mascot from '@/components/mascot/Mascot';
 import { useGameSFX } from '@/hooks/useGameSFX';
 
-const ROUNDS = 8;
+const ROUNDS = 5;
 const HINT_DELAY = 12; // seconds before offering ONE hint
 const MAX_HINTS_PER_ROUND = 1; // only 1 hint per round
 

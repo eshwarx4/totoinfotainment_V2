@@ -25,11 +25,11 @@ export interface LevelConfig {
 
 // Word counts per level
 export const LEVEL_CONFIGS: LevelConfig[] = [
-  { levelNum: 1, wordCount: 3, includeReview: false, reviewCount: 0 },
+  { levelNum: 1, wordCount: 4, includeReview: false, reviewCount: 0 },
   { levelNum: 2, wordCount: 4, includeReview: false, reviewCount: 0 },
-  { levelNum: 3, wordCount: 5, includeReview: true, reviewCount: 2 },
-  { levelNum: 4, wordCount: 5, includeReview: true, reviewCount: 2 },
-  { levelNum: 5, wordCount: 5, includeReview: true, reviewCount: 3 },
+  { levelNum: 3, wordCount: 4, includeReview: true, reviewCount: 2 },
+  { levelNum: 4, wordCount: 4, includeReview: true, reviewCount: 2 },
+  { levelNum: 5, wordCount: 5, includeReview: true, reviewCount: 5 },
 ];
 
 // Story unlock points

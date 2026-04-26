@@ -1932,8 +1932,8 @@
 .candy-map-container {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 20% 12%, rgba(186, 230, 253, 0.22), transparent 28%),
-    linear-gradient(180deg, #255f3b 0%, #2f7b47 38%, #4d8f4e 68%, #3f7342 100%);
+    radial-gradient(circle at 20% 12%, rgba(210, 202, 182, 0.22), transparent 28%),
+    linear-gradient(180deg, #3f4638 0%, #5c664b 42%, #6f604c 100%);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -1947,7 +1947,7 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: linear-gradient(135deg, rgba(22, 65, 45, 0.96), rgba(37, 99, 57, 0.92));
+  background: linear-gradient(135deg, rgba(45, 52, 42, 0.97), rgba(72, 71, 55, 0.94));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 12px 16px;
@@ -2015,10 +2015,48 @@
   overflow: hidden;
   isolation: isolate;
   background-image:
-    radial-gradient(circle at 16% 22%, rgba(255, 255, 255, 0.1) 0 1px, transparent 1.4px),
-    radial-gradient(circle at 72% 46%, rgba(22, 101, 52, 0.18) 0 2px, transparent 2.7px),
+    radial-gradient(circle at 16% 22%, rgba(255, 255, 255, 0.08) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 72% 46%, rgba(79, 70, 54, 0.13) 0 2px, transparent 2.7px),
     linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.05));
   background-size: 22px 22px, 31px 31px, 100% 100%;
+}
+
+.candy-world-forest {
+  background-color: #9a8a68;
+  background-image:
+    radial-gradient(circle at 20% 26%, rgba(109, 86, 58, 0.2), transparent 25%),
+    radial-gradient(circle at 76% 70%, rgba(79, 91, 61, 0.24), transparent 30%),
+    linear-gradient(160deg, #b2a179 0%, #998463 48%, #8d7759 100%);
+}
+
+.candy-world-farm {
+  background-color: #b9aa8d;
+  background-image:
+    radial-gradient(circle at 18% 70%, rgba(86, 125, 137, 0.2), transparent 26%),
+    linear-gradient(155deg, #c8b98f 0%, #a7b7ad 44%, #887761 100%);
+}
+
+.candy-world-nature {
+  background-color: #5f664e;
+  background-image:
+    radial-gradient(circle at 70% 22%, rgba(47, 65, 43, 0.42), transparent 29%),
+    radial-gradient(circle at 20% 78%, rgba(63, 80, 53, 0.44), transparent 34%),
+    linear-gradient(160deg, #7d8064 0%, #58634f 52%, #4a4f43 100%);
+}
+
+.candy-world-village {
+  background-color: #b79f68;
+  background-image:
+    radial-gradient(circle at 24% 74%, rgba(136, 102, 56, 0.22), transparent 30%),
+    linear-gradient(155deg, #c7b37a 0%, #aa8e5d 50%, #8a7558 100%);
+}
+
+.candy-world-bodyLand {
+  background-color: #8b8375;
+  background-image:
+    radial-gradient(circle at 50% 54%, rgba(202, 194, 177, 0.2), transparent 30%),
+    radial-gradient(circle at 82% 20%, rgba(76, 74, 69, 0.25), transparent 26%),
+    linear-gradient(160deg, #a29b8d 0%, #79776e 52%, #5e6258 100%);
 }
 
 /* Depth overlay for worlds */
@@ -2027,9 +2065,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.11) 0%, transparent 48%),
-    radial-gradient(ellipse at 78% 82%, rgba(29, 78, 216, 0.12) 0%, transparent 34%),
-    radial-gradient(ellipse at 70% 80%, rgba(0, 0, 0, 0.14) 0%, transparent 52%);
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 48%),
+    radial-gradient(ellipse at 70% 80%, rgba(0, 0, 0, 0.12) 0%, transparent 52%);
   pointer-events: none;
   z-index: 0;
 }
@@ -2111,13 +2148,42 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(22, 45, 33, 0.66);
+  background: rgba(43, 40, 32, 0.72);
   backdrop-filter: blur(12px) saturate(1.5);
   -webkit-backdrop-filter: blur(12px) saturate(1.5);
   padding: 8px 14px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.candy-world-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 10px rgba(0, 0, 0, 0.22);
+}
+
+.candy-world-dot-forest {
+  background: linear-gradient(135deg, #b89563, #6f5638);
+}
+
+.candy-world-dot-farm {
+  background: linear-gradient(135deg, #77a6b0, #bda978);
+}
+
+.candy-world-dot-nature {
+  background: linear-gradient(135deg, #69745b, #3f4d3c);
+}
+
+.candy-world-dot-village {
+  background: linear-gradient(135deg, #c0a35f, #806144);
+}
+
+.candy-world-dot-bodyLand {
+  background: linear-gradient(135deg, #a19a8b, #666a60);
 }
 
 
