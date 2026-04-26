@@ -782,7 +782,7 @@ export default function MonkeyArrow() {
     if (phase === 'tutorial') {
         return (
             <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
-                <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)' }}>
+                <div className="flex flex-col" style={{ height: 'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}>
                     <div
                         className="flex-1 relative overflow-hidden"
                         onClick={tutorialStep !== 2 ? onTutorialTap : undefined}
@@ -862,7 +862,7 @@ export default function MonkeyArrow() {
     const round = rounds[currentRound];
     return (
         <PlayGameShell title="Forest Archer" icon="🏹" gradient="from-green-500 to-emerald-600">
-            <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+            <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}>
                 {/* Top bar — Big question image + Score + progress */}
                 <div className="flex items-center justify-between px-3 py-2 bg-white/95 backdrop-blur-sm shrink-0 border-b border-gray-100 gap-2">
                     {/* Question: BIG image, highlighted green border */}

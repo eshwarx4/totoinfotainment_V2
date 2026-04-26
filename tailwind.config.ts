@@ -13,6 +13,31 @@ export default {
       },
     },
     extend: {
+      spacing: {
+        "safe-top": "env(safe-area-inset-top)",
+        "safe-bottom": "env(safe-area-inset-bottom)",
+        "safe-left": "env(safe-area-inset-left)",
+        "safe-right": "env(safe-area-inset-right)",
+      },
+      padding: {
+        "safe-top": "env(safe-area-inset-top)",
+        "safe-bottom": "env(safe-area-inset-bottom)",
+        "safe-left": "env(safe-area-inset-left)",
+        "safe-right": "env(safe-area-inset-right)",
+        "safe-x": "env(safe-area-inset-left) env(safe-area-inset-right)",
+      },
+      minHeight: {
+        // Override so min-h-screen across the app uses dynamic vh
+        // (matters for Android keyboard + curved/edge-to-edge layouts).
+        screen: "100dvh",
+        "screen-d": "100dvh",
+        "screen-s": "100svh",
+      },
+      height: {
+        screen: "100dvh",
+        "screen-d": "100dvh",
+        "screen-s": "100svh",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

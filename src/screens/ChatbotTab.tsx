@@ -526,7 +526,7 @@ export default function ChatbotTab() {
   const placeholder = lang === 'bn' ? 'যেকোনো কিছু জিজ্ঞেস করো... 😊' : 'Ask me anything... 😊';
 
   return (
-    <div className="flex flex-col pb-20" style={{ height: 'calc(100vh - 80px)', background: 'linear-gradient(180deg, #EDE9FE 0%, #FFF7ED 50%, #F0FDF4 100%)' }}>
+    <div className="flex flex-col pb-20" style={{ minHeight: 'calc(100dvh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom))', background: 'linear-gradient(180deg, #EDE9FE 0%, #FFF7ED 50%, #F0FDF4 100%)' }}>
       {/* Header */}
       <div className="px-4 py-3 flex-shrink-0 z-10" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
         <div className="max-w-lg mx-auto flex items-center justify-between">

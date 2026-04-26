@@ -29,11 +29,20 @@ export function CandyMapLevel({
     return 'candy-node-locked';
   };
 
+  const stateClass = isCurrent
+    ? 'candy-level-current'
+    : isCompleted
+      ? 'candy-level-completed'
+      : isUnlocked
+        ? 'candy-level-unlocked'
+        : 'candy-level-locked';
+
   return (
     <button
       onClick={onClick}
       disabled={!isUnlocked}
-      className="absolute candy-level-wrapper"
+      className={`absolute candy-level-wrapper ${stateClass}`}
+      aria-label={`Level ${levelNum} in ${worldConfig.name}`}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
@@ -78,7 +87,7 @@ export function CandyMapLevel({
 
       {/* Level label */}
       <div className={`candy-level-label ${isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
-        Lv.{levelNum}
+        {isCurrent ? 'PLAY' : `Lv.${levelNum}`}
       </div>
     </button>
   );

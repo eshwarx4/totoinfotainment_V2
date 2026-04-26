@@ -655,7 +655,7 @@ export default function RunnerGame() {
     // ==========================================
     if (showTut) return (
         <PlayGameShell title="Totopara Runner" icon="🏃" gradient="from-emerald-400 to-green-600">
-            <div className="flex flex-col relative" style={{ height: 'calc(100vh - 56px)' }}>
+            <div className="flex flex-col relative" style={{ height: 'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}>
                 {/* Demo scene with animated runner */}
                 <div className="flex-1 relative overflow-hidden bg-gradient-to-b from-sky-300 to-green-400">
                     <div className="absolute bottom-[28%] left-[15%] animate-bounce" style={{ animationDuration: '0.5s' }}>
@@ -763,7 +763,7 @@ export default function RunnerGame() {
     // Countdown / Playing
     return (
         <PlayGameShell title="Totopara Runner" icon="🏃" gradient="from-emerald-400 to-green-600">
-            <div className="flex flex-col" style={{ height: 'calc(100vh - 56px)' }}>
+            <div className="flex flex-col" style={{ height: 'calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom))' }}>
                 <div className="flex items-center justify-between px-4 py-2 bg-white/60 backdrop-blur-sm shrink-0">
                     <div className="flex items-center gap-3">
                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">🪙 {score}</span>

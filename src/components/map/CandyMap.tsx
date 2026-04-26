@@ -5,205 +5,166 @@ import { WORLDS, WorldConfig } from '@/config/worlds';
 import { WorldId } from '@/types/game';
 import { CandyMapLevel } from './CandyMapLevel';
 import { CurrencyPair } from '@/components/ui/CurrencyDisplay';
-import { ChevronDown, Star, Lock, Check } from 'lucide-react';
+import { Star, Lock, Check } from 'lucide-react';
 
-// Candy Crush style positions - zigzag winding path
+// Realistic village-map positions - winding path through each location
 const LEVEL_POSITIONS = [
-  { x: 35, y: 82 },
-  { x: 65, y: 68 },
-  { x: 35, y: 52 },
-  { x: 65, y: 38 },
-  { x: 45, y: 22 },
+  { x: 34, y: 82 },
+  { x: 62, y: 68 },
+  { x: 38, y: 52 },
+  { x: 67, y: 38 },
+  { x: 48, y: 22 },
 ];
 
 // Winding road path
-const ROAD_PATH = 'M 35,82 C 40,78 55,72 65,68 C 72,65 45,56 35,52 C 25,48 55,42 65,38 C 72,35 55,26 45,22';
+const ROAD_PATH = 'M 34,82 C 45,79 54,73 62,68 C 72,62 49,57 38,52 C 27,47 57,42 67,38 C 76,34 60,27 48,22';
+
+type BuildingKind = 'hut' | 'school' | 'tower' | 'well' | 'field' | 'grove' | 'market' | 'bridge' | 'granary';
+
+const WORLD_ASSETS: Record<string, Array<{ kind: BuildingKind; x: number; y: number; scale: number }>> = {
+  forest: [
+    { kind: 'hut', x: 16, y: 71, scale: 0.98 },
+    { kind: 'school', x: 75, y: 55, scale: 0.92 },
+    { kind: 'well', x: 25, y: 35, scale: 0.85 },
+    { kind: 'granary', x: 86, y: 78, scale: 0.82 },
+  ],
+  farm: [
+    { kind: 'bridge', x: 30, y: 73, scale: 0.9 },
+    { kind: 'hut', x: 78, y: 56, scale: 0.84 },
+    { kind: 'well', x: 25, y: 28, scale: 0.78 },
+    { kind: 'market', x: 87, y: 22, scale: 0.76 },
+  ],
+  nature: [
+    { kind: 'tower', x: 16, y: 72, scale: 0.82 },
+    { kind: 'hut', x: 78, y: 61, scale: 0.78 },
+    { kind: 'well', x: 29, y: 29, scale: 0.76 },
+    { kind: 'grove', x: 84, y: 22, scale: 0.82 },
+  ],
+  village: [
+    { kind: 'field', x: 17, y: 75, scale: 1.02 },
+    { kind: 'granary', x: 78, y: 57, scale: 0.86 },
+    { kind: 'market', x: 30, y: 30, scale: 0.86 },
+    { kind: 'field', x: 86, y: 25, scale: 0.76 },
+  ],
+  bodyLand: [
+    { kind: 'grove', x: 18, y: 70, scale: 0.9 },
+    { kind: 'well', x: 78, y: 55, scale: 0.8 },
+    { kind: 'hut', x: 30, y: 30, scale: 0.78 },
+    { kind: 'tower', x: 86, y: 24, scale: 0.7 },
+  ],
+};
+
+function IsoBuilding({ kind, x, y, scale }: { kind: BuildingKind; x: number; y: number; scale: number }) {
+  const roof = kind === 'school' ? '#3f5f78' : kind === 'market' ? '#8f5d35' : kind === 'tower' ? '#59636b' : '#5e4634';
+  const wall = kind === 'field' ? '#b7a35f' : kind === 'granary' ? '#c2a16f' : '#c6b395';
+
+  if (kind === 'well') {
+    return (
+      <g transform={`translate(${x},${y}) scale(${scale})`}>
+        <ellipse cx="0" cy="7" rx="8" ry="3.5" fill="rgba(0,0,0,0.18)" />
+        <ellipse cx="0" cy="0" rx="7" ry="4" fill="#8a8f88" />
+        <ellipse cx="0" cy="-1" rx="4.5" ry="2.3" fill="#3e7f92" opacity="0.75" />
+        <path d="M-8,0 L-6,7 L6,7 L8,0" fill="#646962" opacity="0.9" />
+      </g>
+    );
+  }
+
+  if (kind === 'bridge') {
+    return (
+      <g transform={`translate(${x},${y}) scale(${scale}) rotate(-18)`}>
+        <ellipse cx="0" cy="9" rx="17" ry="4.5" fill="rgba(0,0,0,0.15)" />
+        <rect x="-16" y="-3" width="32" height="7" rx="1.4" fill="#7b5a3b" />
+        {[-11, -4, 3, 10].map((offset) => (
+          <line key={offset} x1={offset} y1="-5" x2={offset} y2="5" stroke="#c7a178" strokeWidth="1.2" />
+        ))}
+        <line x1="-16" y1="-5" x2="16" y2="-5" stroke="#4e3828" strokeWidth="1" />
+        <line x1="-16" y1="5" x2="16" y2="5" stroke="#4e3828" strokeWidth="1" />
+      </g>
+    );
+  }
+
+  if (kind === 'field') {
+    return (
+      <g transform={`translate(${x},${y}) scale(${scale})`}>
+        <ellipse cx="0" cy="8" rx="13" ry="5" fill="rgba(0,0,0,0.14)" />
+        <polygon points="0,-8 16,0 0,9 -16,0" fill={wall} opacity="0.95" />
+        {[-8, -4, 0, 4, 8].map((offset) => (
+          <path key={offset} d={`M${offset - 7},1 L${offset},-3 L${offset + 7},1`} stroke="#7b6f38" strokeWidth="0.7" fill="none" opacity="0.72" />
+        ))}
+        <polygon points="0,-8 16,0 0,9 -16,0" fill="none" stroke="rgba(63,98,18,0.45)" strokeWidth="0.7" />
+      </g>
+    );
+  }
+
+  if (kind === 'grove') {
+    return (
+      <g transform={`translate(${x},${y}) scale(${scale})`}>
+        <ellipse cx="0" cy="12" rx="15" ry="5" fill="rgba(0,0,0,0.16)" />
+        <ellipse cx="0" cy="2" rx="12" ry="7" fill="#6e756d" opacity="0.72" />
+        {[{ x: -6, y: 0 }, { x: 0, y: -4 }, { x: 6, y: 1 }].map((tree, i) => (
+          <g key={i} transform={`translate(${tree.x},${tree.y})`}>
+            <rect x="-0.7" y="0" width="1.4" height="6" fill="#6d4c36" />
+            <circle cx="0" cy="-2" r="3.4" fill="#475844" />
+          </g>
+        ))}
+      </g>
+    );
+  }
+
+  return (
+    <g transform={`translate(${x},${y}) scale(${scale})`}>
+      <ellipse cx="0" cy="12" rx="13" ry="5" fill="rgba(0,0,0,0.16)" />
+      <polygon points="0,-15 16,-5 0,6 -16,-5" fill={roof} />
+      <polygon points="-16,-5 0,6 0,20 -16,8" fill="#a8845e" />
+      <polygon points="16,-5 0,6 0,20 16,8" fill={wall} />
+      <polygon points="0,6 16,-5 16,8 0,20" fill="rgba(0,0,0,0.08)" />
+      {kind === 'tower' && (
+        <>
+          <rect x="-5" y="-26" width="10" height="12" rx="1.5" fill="#6b7280" />
+          <polygon points="0,-34 8,-25 -8,-25" fill="#8b6b45" />
+        </>
+      )}
+      <rect x="-3" y="10" width="6" height="9" rx="1" fill="#5b3a29" />
+    </g>
+  );
+}
 
 // =============================================
 // TOTOPARA LANDSCAPE DECORATIONS (SVG per world)
 // =============================================
 function TotoparaLandscape({ worldId }: { worldId: string }) {
-  switch (worldId) {
-    case 'forest': // Toto Village
-      return (
-        <g>
-          {/* Ground */}
-          <rect x="0" y="90" width="100" height="10" fill="rgba(139,90,43,0.15)" rx="1" />
-          {/* Traditional Toto huts */}
-          {[{ x: 10, y: 70 }, { x: 88, y: 55 }, { x: 8, y: 35 }].map((h, i) => (
-            <g key={i} transform={`translate(${h.x},${h.y})`}>
-              <rect x="-4" y="-2" width="8" height="6" fill="#D4A36A" rx="0.5" />
-              <polygon points="-5,-2 0,-7 5,-2" fill="#5D4037" />
-              <rect x="-1" y="1" width="2" height="3" fill="#3E2723" />
-              <rect x="2" y="-0.5" width="1.5" height="1.5" fill="#FFE0B2" rx="0.2" />
-            </g>
-          ))}
-          {/* Bamboo fencing */}
-          {[70, 74, 78, 82].map((x, i) => (
-            <g key={`f${i}`}>
-              <rect x={x} y="82" width="0.6" height="6" fill="#8D6E63" rx="0.2" />
-            </g>
-          ))}
-          <line x1="70" y1="83.5" x2="82" y2="83.5" stroke="#A1887F" strokeWidth="0.5" />
-          <line x1="70" y1="85.5" x2="82" y2="85.5" stroke="#A1887F" strokeWidth="0.5" />
-          {/* People figures (tiny) */}
-          {[{ x: 22, y: 88 }, { x: 78, y: 70 }].map((p, i) => (
-            <g key={`p${i}`} transform={`translate(${p.x},${p.y})`}>
-              <circle cx="0" cy="-2" r="1" fill="#8D6E63" />
-              <rect x="-0.6" y="-1" width="1.2" height="3" fill="#E91E63" rx="0.3" />
-            </g>
-          ))}
-          {/* Trees along paths */}
-          {[{ x: 90, y: 40, s: 0.8 }, { x: 5, y: 55, s: 0.7 }, { x: 92, y: 80, s: 0.9 }].map((t, i) => (
-            <g key={`t${i}`} transform={`translate(${t.x},${t.y}) scale(${t.s})`}>
-              <rect x="-0.6" y="0" width="1.2" height="4" fill="#5D4037" rx="0.3" />
-              <circle cx="0" cy="-2" r="3.5" fill="#4CAF50" opacity="0.7" />
-              <circle cx="1.5" cy="-1" r="2.5" fill="#66BB6A" opacity="0.6" />
-            </g>
-          ))}
-          {/* Cooking fire */}
-          <g transform="translate(50,92)">
-            <circle cx="0" cy="0" r="1.5" fill="#FF6F00" opacity="0.4" />
-            <circle cx="0" cy="-0.5" r="0.8" fill="#FFAB00" opacity="0.6" />
-          </g>
+  const assets = WORLD_ASSETS[worldId] || WORLD_ASSETS.forest;
+  const riverPath = worldId === 'farm'
+    ? 'M-5,85 C18,75 28,95 48,83 C68,72 77,90 105,78'
+    : 'M-5,94 C20,88 38,99 58,91 C76,84 88,92 105,86';
+
+  return (
+    <g>
+      <rect x="0" y="0" width="100" height="100" fill="rgba(255,255,255,0.03)" />
+      <path d="M-5,14 C20,4 34,16 50,9 C72,0 88,10 105,3 L105,0 L-5,0Z" fill="rgba(255,255,255,0.16)" />
+      <path d={riverPath} fill="none" stroke="rgba(59,130,246,0.55)" strokeWidth="8" strokeLinecap="round" />
+      <path d={riverPath} fill="none" stroke="rgba(186,230,253,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="5 6" />
+      <path d="M0,96 C16,91 28,95 43,91 C62,86 80,90 100,82 L100,100 L0,100Z" fill="rgba(120,83,54,0.12)" />
+      <path d="M0,88 L17,83 L31,86 L47,78 L62,81 L78,73 L100,78" fill="none" stroke="rgba(120,113,108,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="3 2" />
+      <path d="M3,30 L22,24 L38,28" fill="none" stroke="rgba(120,113,108,0.55)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M69,88 L85,80 L101,82" fill="none" stroke="rgba(120,113,108,0.55)" strokeWidth="3" strokeLinecap="round" />
+      {[10, 16, 22, 77, 83, 89, 95].map((x) => (
+        <rect key={x} x={x} y={x < 40 ? 23 : 79} width="2.5" height="5" rx="0.6" fill="#d6c5ad" stroke="rgba(87,83,78,0.35)" strokeWidth="0.35" />
+      ))}
+      {assets.map((asset) => (
+        <IsoBuilding key={`${asset.kind}-${asset.x}-${asset.y}`} {...asset} />
+      ))}
+      {[{ x: 7, y: 55, s: 0.9 }, { x: 91, y: 45, s: 0.85 }, { x: 12, y: 18, s: 0.75 }, { x: 92, y: 88, s: 0.7 }].map((tree, index) => (
+        <g key={index} transform={`translate(${tree.x},${tree.y}) scale(${tree.s})`}>
+          <ellipse cx="0" cy="5" rx="4" ry="1.6" fill="rgba(0,0,0,0.14)" />
+          <rect x="-0.7" y="0" width="1.4" height="5" rx="0.5" fill="#7c4a2d" />
+          <circle cx="0" cy="-2" r="4" fill="#166534" />
+          <circle cx="2.2" cy="-1" r="3" fill="#22c55e" opacity="0.8" />
         </g>
-      );
-    case 'farm': // Torsha River
-      return (
-        <g>
-          {/* River water */}
-          <path d="M-5,88 Q15,82 30,88 Q45,94 60,88 Q75,82 95,88 L105,88 L105,100 L-5,100Z" fill="rgba(33,150,243,0.2)" />
-          <path d="M-5,92 Q20,86 40,92 Q60,98 80,92 Q95,86 105,92 L105,100 L-5,100Z" fill="rgba(33,150,243,0.15)" />
-          {/* River ripples */}
-          {[{ x: 20, y: 94 }, { x: 50, y: 90 }, { x: 75, y: 93 }].map((r, i) => (
-            <path key={i} d={`M${r.x - 3},${r.y} Q${r.x},${r.y - 1} ${r.x + 3},${r.y}`} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-          ))}
-          {/* Bamboo on riverbank */}
-          {[{ x: 5, y: 72, s: 1.1 }, { x: 92, y: 60, s: 1 }, { x: 8, y: 45, s: 0.9 }, { x: 95, y: 35, s: 0.8 }].map((b, i) => (
-            <g key={i} transform={`translate(${b.x},${b.y}) scale(${b.s})`}>
-              <line x1="0" y1="0" x2="0" y2="-10" stroke="#4E7C31" strokeWidth="0.8" />
-              <line x1="0" y1="-3" x2="-2" y2="-5" stroke="#66BB6A" strokeWidth="0.4" />
-              <line x1="0" y1="-3" x2="2" y2="-5" stroke="#66BB6A" strokeWidth="0.4" />
-              <line x1="0" y1="-6" x2="-2.5" y2="-8" stroke="#66BB6A" strokeWidth="0.4" />
-              <line x1="0" y1="-6" x2="2.5" y2="-8" stroke="#66BB6A" strokeWidth="0.4" />
-            </g>
-          ))}
-          {/* Rocks in river */}
-          {[{ x: 30, y: 95 }, { x: 65, y: 93 }, { x: 85, y: 96 }].map((r, i) => (
-            <ellipse key={`rock${i}`} cx={r.x} cy={r.y} rx="2" ry="1" fill="rgba(158,158,158,0.4)" />
-          ))}
-          {/* Clouds */}
-          {[{ x: 15, y: 12 }, { x: 80, y: 8 }].map((c, i) => (
-            <g key={`c${i}`} opacity="0.3">
-              <ellipse cx={c.x} cy={c.y} rx="7" ry="2.5" fill="white" />
-              <ellipse cx={c.x + 3} cy={c.y - 1.5} rx="4" ry="2" fill="white" />
-            </g>
-          ))}
-          {/* Fish */}
-          <g transform="translate(45,95)" opacity="0.25">
-            <ellipse cx="0" cy="0" rx="2" ry="0.8" fill="#FF9800" />
-            <polygon points="2,0 3.5,1 3.5,-1" fill="#FF9800" />
-          </g>
-        </g>
-      );
-    case 'nature': // Toto Forest
-      return (
-        <g>
-          {/* Dense forest floor */}
-          <ellipse cx="50" cy="97" rx="55" ry="6" fill="rgba(27,94,32,0.2)" />
-          {/* Large trees */}
-          {[{ x: 8, y: 75, s: 1.3 }, { x: 92, y: 65, s: 1.2 }, { x: 5, y: 40, s: 1.1 }, { x: 95, y: 30, s: 1 }, { x: 10, y: 18, s: 0.9 }, { x: 88, y: 85, s: 1.1 }].map((t, i) => (
-            <g key={i} transform={`translate(${t.x},${t.y}) scale(${t.s})`}>
-              <rect x="-1" y="0" width="2" height="6" fill="#5D4037" rx="0.5" />
-              <polygon points="0,-10 -5,0 5,0" fill="#1B5E20" opacity="0.8" />
-              <polygon points="0,-7 -4,1 4,1" fill="#2E7D32" opacity="0.8" />
-              <polygon points="0,-4.5 -3,2 3,2" fill="#388E3C" opacity="0.8" />
-            </g>
-          ))}
-          {/* Animals silhouettes */}
-          <g transform="translate(80,82)" opacity="0.2">
-            <ellipse cx="0" cy="0" rx="3" ry="1.5" fill="#3E2723" />
-            <ellipse cx="-2.5" cy="-1.5" rx="1.2" ry="1" fill="#3E2723" />
-          </g>
-          {/* Butterflies */}
-          {[{ x: 25, y: 60 }, { x: 70, y: 45 }].map((b, i) => (
-            <g key={`b${i}`} transform={`translate(${b.x},${b.y})`} opacity="0.35">
-              <ellipse cx="-1.5" cy="0" rx="1.5" ry="1" fill="#FF9800" />
-              <ellipse cx="1.5" cy="0" rx="1.5" ry="1" fill="#FF9800" />
-              <rect x="-0.2" y="-1.5" width="0.4" height="3" fill="#5D4037" rx="0.2" />
-            </g>
-          ))}
-          {/* Mushrooms */}
-          {[{ x: 22, y: 90 }, { x: 78, y: 80 }, { x: 18, y: 60 }].map((m, i) => (
-            <g key={`m${i}`} transform={`translate(${m.x},${m.y})`}>
-              <rect x="-0.5" y="0" width="1" height="2" fill="#D7CCC8" rx="0.3" />
-              <ellipse cx="0" cy="-0.5" rx="2" ry="1.5" fill="#E53935" />
-              <circle cx="-0.6" cy="-0.8" r="0.4" fill="white" opacity="0.7" />
-            </g>
-          ))}
-        </g>
-      );
-    case 'village': // Hill Fields
-      return (
-        <g>
-          {/* Terraced hills */}
-          <path d="M0,95 Q25,80 50,90 Q75,85 100,95 L100,100 L0,100Z" fill="rgba(139,195,74,0.15)" />
-          <path d="M0,90 Q30,75 55,85 Q80,78 100,90" fill="none" stroke="rgba(139,195,74,0.2)" strokeWidth="0.5" />
-          <path d="M0,85 Q35,70 60,80 Q85,73 100,85" fill="none" stroke="rgba(139,195,74,0.15)" strokeWidth="0.5" />
-          {/* Crop rows */}
-          {[72, 76, 80, 84, 88].map((y, i) => (
-            <g key={i}>
-              {[10, 18, 26, 74, 82, 90].map((x, j) => (
-                <g key={`c${j}`} transform={`translate(${x},${y})`}>
-                  <line x1="0" y1="0" x2="0" y2="-3" stroke="#7CB342" strokeWidth="0.4" />
-                  <ellipse cx="0" cy="-3.5" rx="1" ry="0.8" fill="#8BC34A" opacity="0.6" />
-                </g>
-              ))}
-            </g>
-          ))}
-          {/* Mountains in background */}
-          <polygon points="0,45 15,15 30,45" fill="rgba(100,100,100,0.08)" />
-          <polygon points="70,40 90,10 100,35 100,45" fill="rgba(100,100,100,0.06)" />
-          {/* Sun */}
-          <circle cx="85" cy="12" r="5" fill="#FFD54F" opacity="0.3" />
-        </g>
-      );
-    case 'bodyLand': // Sacred Grove
-      return (
-        <g>
-          {/* Mystical mist */}
-          {[{ x: 20, y: 85, r: 12 }, { x: 70, y: 90, r: 10 }, { x: 45, y: 92, r: 15 }].map((m, i) => (
-            <ellipse key={i} cx={m.x} cy={m.y} rx={m.r} ry="3" fill="rgba(255,255,255,0.08)" />
-          ))}
-          {/* Ancient trees with hanging vines */}
-          {[{ x: 8, y: 60, s: 1.4 }, { x: 92, y: 50, s: 1.3 }, { x: 7, y: 25, s: 1.1 }].map((t, i) => (
-            <g key={i} transform={`translate(${t.x},${t.y}) scale(${t.s})`}>
-              <rect x="-1.2" y="0" width="2.4" height="7" fill="#4E342E" rx="0.5" />
-              <circle cx="0" cy="-3" r="5" fill="#2E7D32" opacity="0.5" />
-              <circle cx="2" cy="-1" r="3.5" fill="#388E3C" opacity="0.4" />
-              {/* Hanging vines */}
-              <line x1="-3" y1="-1" x2="-3.5" y2="4" stroke="#4CAF50" strokeWidth="0.3" opacity="0.4" />
-              <line x1="3" y1="0" x2="3.5" y2="5" stroke="#4CAF50" strokeWidth="0.3" opacity="0.4" />
-            </g>
-          ))}
-          {/* Glowing flowers */}
-          {[{ x: 25, y: 85, c: '#E1BEE7' }, { x: 75, y: 78, c: '#CE93D8' }, { x: 50, y: 88, c: '#F3E5F5' }, { x: 80, y: 30, c: '#E1BEE7' }].map((f, i) => (
-            <g key={`f${i}`}>
-              <circle cx={f.x} cy={f.y} r="1.5" fill={f.c} opacity="0.5" />
-              <circle cx={f.x} cy={f.y} r="0.6" fill="white" opacity="0.4" />
-            </g>
-          ))}
-          {/* Fireflies */}
-          {[{ x: 30, y: 50 }, { x: 60, y: 65 }, { x: 85, y: 72 }, { x: 20, y: 40 }].map((ff, i) => (
-            <circle key={`ff${i}`} cx={ff.x} cy={ff.y} r="0.5" fill="#FFEB3B" opacity="0.4">
-              <animate attributeName="opacity" values="0.2;0.6;0.2" dur={`${2 + i * 0.5}s`} repeatCount="indefinite" />
-            </circle>
-          ))}
-        </g>
-      );
-    default:
-      return null;
-  }
+      ))}
+      <ellipse cx="50" cy="52" rx="45" ry="34" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.7" strokeDasharray="1 5" />
+    </g>
+  );
 }
 
 // =============================================
@@ -253,7 +214,6 @@ function MilestoneGate({ fromWorld, toWorld, isUnlocked, completedLevels, requir
 // =============================================
 interface WorldSectionProps {
   world: WorldConfig;
-  worldIndex: number;
   isUnlocked: boolean;
   levels: {
     levelNum: number;
@@ -266,7 +226,7 @@ interface WorldSectionProps {
   t: (key: string) => string;
 }
 
-function WorldSection({ world, worldIndex, isUnlocked, levels, currentLevel, onLevelClick, t }: WorldSectionProps) {
+function WorldSection({ world, isUnlocked, levels, currentLevel, onLevelClick, t }: WorldSectionProps) {
   return (
     <div className={`candy-world-section ${!isUnlocked ? 'candy-world-locked' : ''}`}>
       <div className={`candy-world-bg bg-gradient-to-b ${world.bgGradient}`}>
@@ -417,7 +377,6 @@ export function CandyMap() {
               )}
               <WorldSection
                 world={world}
-                worldIndex={index}
                 isUnlocked={unlocked}
                 levels={levels}
                 currentLevel={currentLevel}

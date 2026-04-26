@@ -62,7 +62,17 @@ function WithFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="phone-frame">
       <div className="phone-screen">
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingLeft: 'env(safe-area-inset-left)',
+            paddingRight: 'env(safe-area-inset-right)',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

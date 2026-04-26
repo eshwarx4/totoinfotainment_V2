@@ -147,18 +147,18 @@ export default function GameScreen() {
           <div className="flex items-center justify-between mb-2.5">
             <button
               onClick={() => navigate(`/world/${wid}`)}
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center
+              className="w-9 h-9 shrink-0 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center
                          transition-all active:scale-90"
             >
               <X className="w-4 h-4 text-gray-500" />
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{GAME_EMOJIS[gameIndex]}</span>
-              <span className="text-sm font-bold text-gray-700">
+            <div className="flex items-center justify-center gap-2 min-w-0 flex-1 px-3">
+              <span className="text-lg shrink-0">{GAME_EMOJIS[gameIndex]}</span>
+              <span className="text-sm font-bold text-gray-700 truncate">
                 {GAME_NAMES[gameIndex]}
               </span>
             </div>
-            <div className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${worldConfig.bgGradient} text-white shadow-sm`}>
+            <div className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${worldConfig.bgGradient} text-white shadow-sm`}>
               {worldConfig.icon} Lv.{level}
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function GameScreen() {
           </div>
           <div className="flex justify-between mt-1.5">
             {[1, 2, 3].map(g => (
-              <span key={g} className={`text-[10px] font-medium ${g <= gameIndex ? 'text-gray-600' : 'text-gray-400'
+              <span key={g} className={`flex-1 px-1 text-center truncate text-[9px] sm:text-[10px] font-medium ${g <= gameIndex ? 'text-gray-600' : 'text-gray-400'
                 }`}>
                 {GAME_NAMES[g]}
               </span>

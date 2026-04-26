@@ -9,7 +9,15 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div className="phone-frame">
       <div className="phone-screen">
-        <div className="flex-1 overflow-y-auto pb-24">
+        <div
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingLeft: 'env(safe-area-inset-left)',
+            paddingRight: 'env(safe-area-inset-right)',
+            paddingBottom: 'calc(6rem + env(safe-area-inset-bottom))',
+          }}
+        >
           {children}
         </div>
         <BottomNavbar />
