@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { GameProvider } from "@/state/GameContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import AppShell from "@/components/layout/AppShell";
+import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 
 // Screens — Onboarding (no navbar)
 import Welcome from "./screens/Welcome";
@@ -78,7 +79,9 @@ function WithFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-const App = () => (
+const App = () => {
+  useAndroidBackButton();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -142,6 +145,7 @@ const App = () => (
       </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
