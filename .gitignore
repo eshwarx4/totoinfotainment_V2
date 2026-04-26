@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# V1 (kept locally only, not tracked)
+V1/
