@@ -36,7 +36,8 @@ function getRandomWords(count: number): WordItem[] {
 }
 
 /**
- * The core Puzzle Board component
+ * The core Puzzle Board component — real drag-and-drop via Pointer Events API.
+ * Works on Android (touch), iOS (touch), and desktop (mouse) with one unified handler.
  */
 function PuzzleBoard({
     word,
@@ -49,18 +50,23 @@ function PuzzleBoard({
 }) {
     const config = DIFFICULTY_MAP[difficulty];
     const { cols, rows, pieces } = config;
+    const sfx = useGameSFX();
 
-    // Board state: each cell index -> which piece index is placed there (or null)
+    // Board state
     const [board, setBoard] = useState<(number | null)[]>(Array(pieces).fill(null));
-    // Tray: remaining pieces that haven't been placed
     const [tray, setTray] = useState<number[]>([]);
-    // Currently dragged piece
-    const [dragPiece, setDragPiece] = useState<number | null>(null);
-    // Feedback
     const [correctCells, setCorrectCells] = useState<Set<number>>(new Set());
     const [shakingCell, setShakingCell] = useState<number | null>(null);
     const [isComplete, setIsComplete] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
+
+    // Drag state (tracked in refs to avoid stale closures in pointer handlers)
+    const dragging = useRef<{
+        pieceIndex: number;
+        ghostEl: HTMLDivElement;
+        offsetX: number;
+        offsetY: number;
+    } | null>(null);
 
     const startTime = useRef(Date.now());
     const boardRef = useRef<HTMLDivElement>(null);
@@ -72,14 +78,13 @@ function PuzzleBoard({
         setBoard(Array(pieces).fill(null));
         setCorrectCells(new Set());
         setIsComplete(false);
-        setDragPiece(null);
+        dragging.current = null;
         startTime.current = Date.now();
 
-        // Preload image
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => setImageLoaded(true);
-        img.onerror = () => setImageLoaded(true); // proceed even on error
+        img.onerror = () => setImageLoaded(true);
         img.src = word.imageUrl;
     }, [word, pieces]);
 
@@ -92,53 +97,96 @@ function PuzzleBoard({
         }
     }, [correctCells.size, pieces, tray.length, onComplete]);
 
-    const handleDragStart = useCallback((pieceIndex: number) => {
-        setDragPiece(pieceIndex);
-    }, []);
-
-    const handleDrop = useCallback(
-        (cellIndex: number, sfx?: ReturnType<typeof useGameSFX>) => {
-            if (dragPiece === null) return;
-
-            // Check if the piece matches the cell
-            if (dragPiece === cellIndex) {
-                // Correct!
-                sfx?.playSnap();
-                setBoard(prev => {
-                    const next = [...prev];
-                    next[cellIndex] = dragPiece;
-                    return next;
-                });
-                setTray(prev => prev.filter(p => p !== dragPiece));
-                setCorrectCells(prev => new Set([...prev, cellIndex]));
-            } else {
-                // Wrong — shake
-                sfx?.playWrong();
-                setShakingCell(cellIndex);
-                setTimeout(() => setShakingCell(null), 500);
-            }
-            setDragPiece(null);
-        },
-        [dragPiece]
-    );
-
-    // Touch handlers for mobile drag-and-drop
-    const handleTouchDrop = useCallback(
-        (e: React.TouchEvent, cellIndex: number) => {
-            e.preventDefault();
-            handleDrop(cellIndex);
-        },
-        [handleDrop]
-    );
-
-    // Calculate piece style for showing a portion of the image
+    // Calculate piece style — crops the right slice of the image
+    const cellSize = Math.floor((Math.min(320, window.innerWidth - 48)) / cols);
     const getPieceStyle = (pieceIndex: number, size: number): React.CSSProperties => ({
         backgroundImage: `url(${word.imageUrl})`,
         backgroundSize: `${cols * size}px ${rows * size}px`,
         backgroundPosition: `-${(pieceIndex % cols) * size}px -${Math.floor(pieceIndex / cols) * size}px`,
         width: size,
         height: size,
+        borderRadius: 8,
     });
+
+    /* ──────────────────────────────────────────
+       Pointer-event drag handlers (start, move, end)
+       ────────────────────────────────────────── */
+
+    const onPiecePointerDown = (e: React.PointerEvent, pieceIndex: number) => {
+        e.preventDefault();
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+
+        const trayPieceSize = Math.min(60, cellSize - 8);
+
+        // Create a floating ghost element that follows the pointer
+        const ghost = document.createElement('div');
+        ghost.style.cssText = `
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            width: ${trayPieceSize}px;
+            height: ${trayPieceSize}px;
+            border-radius: 10px;
+            border: 3px solid #7c3aed;
+            box-shadow: 0 8px 24px rgba(124,58,237,0.45);
+            opacity: 0.92;
+            transform: scale(1.15);
+            transition: none;
+            background-image: url(${word.imageUrl});
+            background-size: ${cols * trayPieceSize}px ${rows * trayPieceSize}px;
+            background-position: -${(pieceIndex % cols) * trayPieceSize}px -${Math.floor(pieceIndex / cols) * trayPieceSize}px;
+        `;
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        ghost.style.left = `${rect.left}px`;
+        ghost.style.top = `${rect.top}px`;
+        document.body.appendChild(ghost);
+
+        dragging.current = {
+            pieceIndex,
+            ghostEl: ghost,
+            offsetX: e.clientX - rect.left,
+            offsetY: e.clientY - rect.top,
+        };
+    };
+
+    const onPiecePointerMove = (e: React.PointerEvent) => {
+        if (!dragging.current) return;
+        e.preventDefault();
+        const { ghostEl, offsetX, offsetY } = dragging.current;
+        ghostEl.style.left = `${e.clientX - offsetX}px`;
+        ghostEl.style.top = `${e.clientY - offsetY}px`;
+    };
+
+    const onPiecePointerUp = (e: React.PointerEvent) => {
+        if (!dragging.current) return;
+        const { pieceIndex, ghostEl } = dragging.current;
+
+        // Temporarily hide ghost so elementFromPoint finds the cell underneath
+        ghostEl.style.display = 'none';
+        const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+        ghostEl.remove();
+        dragging.current = null;
+
+        // Check if we dropped on a cell
+        const cellEl = targetEl?.closest('[data-cell-index]') as HTMLElement | null;
+        if (!cellEl) return;
+
+        const cellIndex = parseInt(cellEl.dataset.cellIndex ?? '-1', 10);
+        if (cellIndex < 0) return;
+
+        if (pieceIndex === cellIndex) {
+            // ✅ Correct!
+            sfx.playSnap();
+            setBoard(prev => { const n = [...prev]; n[cellIndex] = pieceIndex; return n; });
+            setTray(prev => prev.filter(p => p !== pieceIndex));
+            setCorrectCells(prev => new Set([...prev, cellIndex]));
+        } else {
+            // ❌ Wrong cell — shake
+            sfx.playWrong();
+            setShakingCell(cellIndex);
+            setTimeout(() => setShakingCell(null), 500);
+        }
+    };
 
     if (!imageLoaded) {
         return (
@@ -148,8 +196,6 @@ function PuzzleBoard({
             </div>
         );
     }
-
-    const cellSize = Math.floor((Math.min(320, window.innerWidth - 48)) / cols);
 
     return (
         <div className="flex flex-col items-center gap-4">
@@ -174,28 +220,17 @@ function PuzzleBoard({
                     return (
                         <div
                             key={cellIdx}
+                            data-cell-index={cellIdx}
                             className={`relative transition-all duration-200 ${isShaking ? 'animate-shake' : ''
                                 } ${isPlaced
                                     ? 'ring-2 ring-game-correct/50'
-                                    : dragPiece !== null
-                                        ? 'bg-violet-100/60 ring-2 ring-dashed ring-violet-300'
-                                        : 'bg-gray-100/60'
+                                    : 'bg-violet-100/60 ring-2 ring-dashed ring-violet-300'
                                 }`}
                             style={{ width: cellSize, height: cellSize }}
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={() => handleDrop(cellIdx)}
-                            onTouchEnd={(e) => handleTouchDrop(e, cellIdx)}
-                            onClick={() => {
-                                // Tap-to-place on mobile
-                                if (dragPiece !== null) {
-                                    handleDrop(cellIdx);
-                                }
-                            }}
                         >
                             {isPlaced && (
                                 <div
-                                    className={`absolute inset-0 bg-cover transition-all duration-300 ${isCorrect ? 'opacity-100' : 'opacity-80'
-                                        }`}
+                                    className={`absolute inset-0 transition-all duration-300 ${isCorrect ? 'opacity-100' : 'opacity-80'}`}
                                     style={getPieceStyle(cellIdx, cellSize)}
                                 />
                             )}
@@ -219,33 +254,30 @@ function PuzzleBoard({
                 </p>
             </div>
 
-            {/* Piece tray */}
+            {/* Piece tray — drag pieces from here */}
             {tray.length > 0 && (
                 <div className="w-full">
                     <p className="text-xs text-muted-foreground text-center mb-2">
-                        Tap a piece, then tap where it goes!
+                        Drag a piece onto the matching slot!
                     </p>
-                    <div
-                        className="flex flex-wrap justify-center gap-2 p-3 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200"
-                    >
+                    <div className="flex flex-wrap justify-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200">
                         {tray.map((pieceIdx) => {
                             const trayPieceSize = Math.min(60, cellSize - 8);
-                            const isSelected = dragPiece === pieceIdx;
-
                             return (
-                                <button
+                                <div
                                     key={pieceIdx}
-                                    onClick={() => handleDragStart(pieceIdx)}
-                                    draggable
-                                    onDragStart={() => handleDragStart(pieceIdx)}
-                                    onTouchStart={() => handleDragStart(pieceIdx)}
-                                    className={`rounded-xl overflow-hidden transition-all duration-200 cursor-grab active:cursor-grabbing
-                    ${isSelected
-                                            ? 'ring-3 ring-violet-500 scale-110 shadow-lg shadow-violet-200'
-                                            : 'ring-1 ring-gray-200 hover:ring-violet-300 active:scale-95 shadow-sm'
-                                        }`}
+                                    className="rounded-xl overflow-hidden cursor-grab active:cursor-grabbing shadow-sm ring-1 ring-gray-200 touch-none select-none"
                                     style={getPieceStyle(pieceIdx, trayPieceSize)}
                                     title={`Piece ${pieceIdx + 1}`}
+                                    onPointerDown={(e) => onPiecePointerDown(e, pieceIdx)}
+                                    onPointerMove={onPiecePointerMove}
+                                    onPointerUp={onPiecePointerUp}
+                                    onPointerCancel={() => {
+                                        if (dragging.current) {
+                                            dragging.current.ghostEl.remove();
+                                            dragging.current = null;
+                                        }
+                                    }}
                                 />
                             );
                         })}
