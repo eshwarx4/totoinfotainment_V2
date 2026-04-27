@@ -9,7 +9,21 @@ import { CoinPopup } from '@/components/effects/CoinPopup';
 import { playCorrectSound, playWrongSound, playLearnSound, playSkipSound, playCompletionSound } from '@/lib/sounds';
 
 /* ─── Voice Practice States ─── */
-type VoiceState = 'idle' | 'listening' | 'processing' | 'correct' | 'incorrect';
+type VoiceState = 'idle' | 'listening' | 'correct' | 'incorrect';
+
+/* ─── Levenshtein distance for fuzzy word matching ─── */
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return dp[m][n];
+}
 
 /* ─── Voice Practice Panel ─── */
 function VoicePractice({
@@ -20,48 +34,128 @@ function VoicePractice({
   onClose: () => void;
 }) {
   const [state, setState] = useState<VoiceState>('idle');
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const [liveText, setLiveText] = useState('');   // shown in real-time as user speaks
+  const [finalText, setFinalText] = useState(''); // what was actually recognised
+  const [notSupported, setNotSupported] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
+  /* ── stop any running session ── */
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) { /* ignore */ }
+      recognitionRef.current = null;
+    }
+  };
+
+  /* ── start listening ── */
   const startListening = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { setNotSupported(true); return; }
+
+    setLiveText('');
+    setFinalText('');
     setState('listening');
-    // Mock: after 2.5s of "listening", go to processing
-    timeoutRef.current = setTimeout(() => {
-      setState('processing');
-      // Mock: after 1s of "processing", randomly succeed/fail (70% success)
-      timeoutRef.current = setTimeout(() => {
-        const isCorrect = Math.random() > 0.3;
-        setState(isCorrect ? 'correct' : 'incorrect');
-        if (isCorrect) playCorrectSound();
-        else playWrongSound();
-      }, 800);
-    }, 2500);
-  };
 
-  const reset = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setState('idle');
-  };
+    const r = new SR();
+    recognitionRef.current = r;
+    r.lang = 'en-US';
+    r.interimResults = true;   // ← gives us real-time text
+    r.maxAlternatives = 3;
+    r.continuous = false;
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onresult = (event: any) => {
+      let interim = '';
+      let finalStr = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const txt: string = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalStr += txt;
+        else interim += txt;
+      }
+      // Update live display every time the browser gives us interim/final
+      setLiveText(finalStr || interim);
+      if (finalStr) setFinalText(finalStr);
     };
-  }, []);
+
+    r.onend = () => {
+      recognitionRef.current = null;
+      // If we never got a final result the session ended silently → go back to idle
+      setFinalText(prev => {
+        if (!prev) setState('idle');
+        return prev;
+      });
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onerror = (event: any) => {
+      console.warn('SpeechRecognition error:', event.error);
+      recognitionRef.current = null;
+      if (event.error !== 'aborted') setState('idle');
+    };
+
+    r.start();
+  };
+
+  /* ── evaluate once final text arrives ── */
+  useEffect(() => {
+    if (!finalText) return;
+    const spoken = finalText.trim().toLowerCase();
+    const target = word.english.trim().toLowerCase();
+    // Accept: exact match, contains, or off by ≤1 character
+    const isCorrect =
+      spoken === target ||
+      spoken.includes(target) ||
+      target.includes(spoken) ||
+      levenshtein(spoken, target) <= 1;
+
+    setState(isCorrect ? 'correct' : 'incorrect');
+    if (isCorrect) playCorrectSound();
+    else playWrongSound();
+  }, [finalText]);
+
+  /* ── retry ── */
+  const reset = () => {
+    stopRecognition();
+    setState('idle');
+    setLiveText('');
+    setFinalText('');
+  };
+
+  /* ── cleanup on unmount ── */
+  useEffect(() => () => stopRecognition(), []);
 
   return (
-    <div className="voice-practice-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      className="voice-practice-overlay"
+      onClick={(e) => { if (e.target === e.currentTarget) { stopRecognition(); onClose(); } }}
+    >
       <div className="voice-practice-panel">
         {/* Close */}
-        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+        <button
+          onClick={() => { stopRecognition(); onClose(); }}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+        >
           <X className="w-4 h-4 text-white/70" />
         </button>
 
         <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-2">Say this word</p>
-        <h2 className="text-white text-3xl font-black mb-8">{word.english}</h2>
+        <h2 className="text-white text-3xl font-black mb-3">{word.english}</h2>
 
-        {/* Mic area */}
-        <div className="relative flex items-center justify-center mb-8">
-          {/* Pulse rings when listening */}
+        {/* ── Real-time transcript display ── */}
+        <div className="w-full mb-5 px-4 py-3 rounded-2xl bg-white/10 min-h-[48px] flex items-center justify-center">
+          {liveText ? (
+            <p className="text-white text-lg font-semibold tracking-wide text-center">{liveText}</p>
+          ) : (
+            <p className="text-white/30 text-sm italic text-center">
+              {state === 'listening' ? 'Speak now…' : 'Your words will appear here'}
+            </p>
+          )}
+        </div>
+
+        {/* ── Mic area ── */}
+        <div className="relative flex items-center justify-center mb-5">
           {state === 'listening' && (
             <>
               <div className="voice-pulse-ring voice-pulse-ring-1" />
@@ -71,28 +165,22 @@ function VoicePractice({
           )}
 
           {state === 'idle' && (
-            <button
-              onClick={startListening}
-              className="voice-mic-btn"
-            >
+            <button onClick={startListening} className="voice-mic-btn">
               <Mic className="w-8 h-8 text-white" />
             </button>
           )}
 
           {state === 'listening' && (
-            <div className="voice-mic-btn voice-mic-listening">
+            <button
+              onClick={() => { stopRecognition(); setState('idle'); setLiveText(''); }}
+              className="voice-mic-btn voice-mic-listening"
+            >
               <div className="voice-wave-bars">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="voice-wave-bar" style={{ animationDelay: `${i * 0.1}s` }} />
                 ))}
               </div>
-            </div>
-          )}
-
-          {state === 'processing' && (
-            <div className="voice-mic-btn voice-mic-processing">
-              <div className="voice-spinner" />
-            </div>
+            </button>
           )}
 
           {state === 'correct' && (
@@ -108,32 +196,49 @@ function VoicePractice({
           )}
         </div>
 
-        {/* Status text */}
+        {/* ── Status messages ── */}
         <div className="text-center min-h-[60px]">
-          {state === 'idle' && (
-            <p className="text-white/50 text-sm">Tap the mic and say "<span className="text-white font-bold">{word.english}</span>"</p>
+          {notSupported && (
+            <p className="text-amber-300 text-sm">
+              Speech recognition not supported. Please use Chrome or Edge.
+            </p>
+          )}
+          {!notSupported && state === 'idle' && (
+            <p className="text-white/50 text-sm">
+              Tap the mic and say "<span className="text-white font-bold">{word.english}</span>"
+            </p>
           )}
           {state === 'listening' && (
-            <p className="text-white/80 text-sm animate-pulse">Listening...</p>
-          )}
-          {state === 'processing' && (
-            <p className="text-white/60 text-sm">Checking your pronunciation...</p>
+            <p className="text-white/70 text-sm animate-pulse">Listening… tap mic to stop early</p>
           )}
           {state === 'correct' && (
             <div className="voice-result-correct">
-              <p className="text-emerald-300 text-lg font-bold mb-1">Great job!</p>
-              <p className="text-white/50 text-xs">Your pronunciation sounds great</p>
-              <button onClick={onClose} className="mt-4 px-6 py-2 rounded-full bg-emerald-500 text-white text-sm font-bold active:scale-95 transition-transform">
+              <p className="text-emerald-300 text-lg font-bold mb-1">Great job! 🎉</p>
+              <p className="text-white/50 text-xs">
+                You said: <span className="text-white font-semibold">"{finalText}"</span>
+              </p>
+              <button
+                onClick={onClose}
+                className="mt-4 px-6 py-2 rounded-full bg-emerald-500 text-white text-sm font-bold active:scale-95 transition-transform"
+              >
                 Continue
               </button>
             </div>
           )}
           {state === 'incorrect' && (
             <div className="voice-result-incorrect">
-              <p className="text-amber-300 text-lg font-bold mb-1">Try again</p>
-              <p className="text-white/50 text-xs mb-3">Listen to the word and try once more</p>
-              <button onClick={reset} className="px-5 py-2 rounded-full bg-white/15 text-white text-sm font-bold active:scale-95 transition-transform flex items-center gap-2 mx-auto">
-                <RotateCcw className="w-3.5 h-3.5" /> Retry
+              <p className="text-amber-300 text-lg font-bold mb-1">Not quite!</p>
+              <p className="text-white/50 text-xs mb-0.5">
+                You said: <span className="text-white font-semibold">"{finalText}"</span>
+              </p>
+              <p className="text-white/40 text-xs mb-3">
+                Expected: <span className="text-white/70 font-semibold">"{word.english}"</span>
+              </p>
+              <button
+                onClick={reset}
+                className="px-5 py-2 rounded-full bg-white/15 text-white text-sm font-bold active:scale-95 transition-transform flex items-center gap-2 mx-auto"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Try Again
               </button>
             </div>
           )}
@@ -396,7 +501,7 @@ export default function CategoryWords() {
     const audio = new Audio(url);
     audioRef.current = audio;
     setPlayingAudio(type);
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
     audio.onended = () => setPlayingAudio(null);
   };
 
